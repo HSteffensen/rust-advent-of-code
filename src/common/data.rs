@@ -186,14 +186,15 @@ fn fetch_examples(year: u32, day: u32) -> Vec<(String, String)> {
             examples.push((content, line));
         }
     }
-    // let ongoing = true;
+    // let mut ongoing = true;
     // while ongoing {
     //     println!("Manual example input. 'Enter' to end. '```' to begin multiline example. Otherwise, single-line example:");
     //     let mut line = String::new();
     //     io::stdin().lock().read_line(&mut line).unwrap();
     //     let line = line.trim().to_owned();
-    //     if !line.is_empty() {
-    //         examples.push((content, line));
+    //     if line.is_empty() {
+    //         ongoing = false;
+    //         break;
     //     }
     // }
 
