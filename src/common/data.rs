@@ -112,8 +112,7 @@ pub fn submit_answer(year: u32, day: u32, part: u32, answer: &str) -> bool {
 }
 
 fn check_one_minute_between_submissions() {
-    let last_incorrect_submission_filename = format!("./data/last_incorrect_submission.txt");
-    let time_since_last_fail = fs::read_to_string(&last_incorrect_submission_filename)
+    let time_since_last_fail = fs::read_to_string("./data/last_incorrect_submission.txt")
         .map(|contents| -> Duration {
             Utc::now().signed_duration_since(DateTime::parse_from_rfc3339(&contents).unwrap())
         })
@@ -186,16 +185,25 @@ fn fetch_examples(year: u32, day: u32) -> Vec<(String, String)> {
             examples.push((content, line));
         }
     }
-    // let ongoing = true;
-    // while ongoing {
-    //     println!("Manual example input. 'Enter' to end. '```' to begin multiline example. Otherwise, single-line example:");
-    //     let mut line = String::new();
-    //     io::stdin().lock().read_line(&mut line).unwrap();
-    //     let line = line.trim().to_owned();
-    //     if !line.is_empty() {
-    //         examples.push((content, line));
-    //     }
-    // }
+    let mut lines = io::stdin().lock().lines();
+    while let Some(line) = lines.next() {
+        println!("Manual example input. 'Enter' to end. '```' to begin multiline example. Otherwise, single-line example:");
+        let mut content = String::new();
+        let line = line.unwrap().trim().to_owned();
+        if line.is_empty() {
+            break;
+        }
+        if !line.is_empty() {
+            // todo: cleanup if statement and handle ```
+            content = line;
+            if let Some(line) = lines.next() {
+                examples.push((content, line.unwrap().trim().to_owned()));
+            } else {
+                panic!("Failed to accept input for example")
+            }
+            continue;
+        }
+    }
 
     examples
 }
