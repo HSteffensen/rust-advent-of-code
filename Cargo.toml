@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 chrono = "0.4.23"
 kuchiki = "0.8.1"
+regex = "1.7.0"
 serde = "1.0.147"
 serde_json = "1.0.88"
 ureq = { version = "2.5.0", features = ["json", "serde", "serde_json", "cookies"] }
