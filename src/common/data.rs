@@ -1,23 +1,22 @@
 use chrono::{DateTime, Duration, Utc};
-use kuchiki::{parse_html, traits::TendrilSink};
-use std::{
-    error::Error,
-    fs,
-    io::{self, BufRead},
-    thread::sleep,
+use std::{error::Error, fs, thread::sleep};
+
+use crate::common::data::{
+    examples::fetch_examples,
+    req::{aoc_request, post_answer},
 };
-use ureq::{self, Cookie};
 
-trait AocSolution {
-    const YEAR: u32;
-    const DAY: u32;
-    const PART: u32;
+mod examples;
+mod req;
 
-    fn implementation(&self) -> String;
-
-    fn solve(&self) {}
-
-    fn input(&self) {}
+pub fn input_to_ints(input: &str) -> Vec<i64> {
+    let mut numbers: Vec<i64> = Vec::new();
+    for line in input.lines() {
+        if let Ok(line_as_number) = line.parse() {
+            numbers.push(line_as_number);
+        }
+    }
+    numbers
 }
 
 pub fn get_input(year: u32, day: u32) -> String {
@@ -44,7 +43,7 @@ pub fn get_examples(year: u32, day: u32, part: u32) -> Vec<(String, String)> {
     assert!((1..=25).contains(&day));
     assert!((1..=2).contains(&part));
     let data_folder = format!("./data/{}/{}", year, day);
-    let examples_filename = format!("{}/examples_part{}.txt", data_folder, part);
+    let examples_filename = format!("{}/examples_part{}.json", data_folder, part);
     fs::read_to_string(&examples_filename)
         .map(|contents| serde_json::from_str::<Vec<(String, String)>>(&contents).unwrap())
         .or_else(|_| -> Result<Vec<(String, String)>, Box<dyn Error>> {
@@ -52,7 +51,7 @@ pub fn get_examples(year: u32, day: u32, part: u32) -> Vec<(String, String)> {
                 "Couldn't find examples file {}, fetching from adventofcode.com",
                 examples_filename
             );
-            let fetched_input = fetch_examples(year, day);
+            let fetched_input = fetch_examples(year, day, part);
             let examples_str = serde_json::to_string(&fetched_input).unwrap();
             fs::create_dir_all(&data_folder).unwrap();
             fs::write(examples_filename, &examples_str).unwrap();
@@ -67,29 +66,14 @@ pub fn submit_answer(year: u32, day: u32, part: u32, answer: &str) -> bool {
     assert!((1..=2).contains(&part));
     check_one_minute_between_submissions();
 
-    let data_folder = format!("./data/{}/{}", year, day);
-    let incorrects_filename = format!("{}/incorrect.txt", data_folder);
-    let mut known_incorrect_answers = fs::read_to_string(&incorrects_filename)
-        .map(|contents| serde_json::from_str::<Vec<String>>(&contents).unwrap())
-        .or_else(|_| -> Result<Vec<String>, Box<dyn Error>> {
-            fs::create_dir_all(&data_folder).unwrap();
-            let no_incorrects: Vec<String> = vec![];
-            fs::write(
-                &incorrects_filename,
-                serde_json::to_string(&no_incorrects).unwrap(),
-            )
-            .unwrap();
-            Ok(no_incorrects)
-        })
-        .unwrap();
-    let answer_owned = answer.to_string();
-    if known_incorrect_answers.contains(&answer_owned) {
+    if answer_is_known_incorrect(year, day, part, answer) {
         println!(
             "Already known to be incorrect for {} day {} part {}: `{}`",
             year, day, part, answer
         );
         return false;
-    };
+    }
+
     if post_answer(year, day, part, answer) {
         println!(
             "Correct answer submitted for {} day {} part {}: `{}`!",
@@ -101,14 +85,17 @@ pub fn submit_answer(year: u32, day: u32, part: u32, answer: &str) -> bool {
             "Incorrect answer submitted for {} day {} part {}: `{}`",
             year, day, part, answer
         );
-        known_incorrect_answers.push(answer_owned);
-        fs::write(
-            incorrects_filename,
-            serde_json::to_string(&known_incorrect_answers).unwrap(),
-        )
-        .unwrap();
+        write_answer_incorrect(year, day, part, answer);
         false
     }
+}
+
+fn data_folder(year: u32, day: u32) -> String {
+    format!("./data/{}/{}", year, day)
+}
+
+fn incorrect_answers_filename(year: u32, day: u32, part: u32) -> String {
+    format!("{}/incorrect_part{}.json", data_folder(year, day), part)
 }
 
 fn check_one_minute_between_submissions() {
@@ -119,7 +106,7 @@ fn check_one_minute_between_submissions() {
         .or_else(|_| -> Result<Duration, Box<dyn Error>> { Ok(Duration::hours(1)) })
         .unwrap();
     if time_since_last_fail < Duration::minutes(1) {
-        let remaining_time = Duration::minutes(1) - time_since_last_fail;
+        let remaining_time = Duration::minutes(1) - time_since_last_fail + Duration::seconds(1);
         println!(
             "Too short time between submissions, sleeping for {} seconds before next submission",
             remaining_time.num_seconds()
@@ -128,17 +115,37 @@ fn check_one_minute_between_submissions() {
     }
 }
 
-fn load_session_cookie() -> String {
-    let cookie_file_name = "./data/.session_cookie";
-    fs::read_to_string(cookie_file_name)
-        .map(|s| s.trim().to_string())
-        .or_else(|_err| -> Result<String, Box<dyn Error>> {
-            println!("No session cookie found. Please log in to https://adventofcode.com/ in your browser, open the browser console, copy the value of the 'session' cookie, and paste it here:");
-            let mut line = String::new();
-            io::stdin().lock().read_line(&mut line)?;
-            fs::write(cookie_file_name, &line)?;
-            Ok(line.trim().to_string())
-        }).unwrap()
+fn answer_is_known_incorrect(year: u32, day: u32, part: u32, answer: &str) -> bool {
+    let known_incorrect_answers = read_incorrect_answers(year, day, part);
+    known_incorrect_answers.contains(&answer.to_owned())
+}
+
+fn read_incorrect_answers(year: u32, day: u32, part: u32) -> Vec<String> {
+    let data_folder = data_folder(year, day);
+    let incorrects_filename = incorrect_answers_filename(year, day, part);
+    fs::read_to_string(&incorrects_filename)
+        .map(|contents| serde_json::from_str::<Vec<String>>(&contents).unwrap())
+        .or_else(|_| -> Result<Vec<String>, Box<dyn Error>> {
+            fs::create_dir_all(&data_folder).unwrap();
+            let no_incorrects: Vec<String> = vec![];
+            fs::write(
+                &incorrects_filename,
+                serde_json::to_string(&no_incorrects).unwrap(),
+            )
+            .unwrap();
+            Ok(no_incorrects)
+        })
+        .unwrap()
+}
+
+fn write_answer_incorrect(year: u32, day: u32, part: u32, answer: &str) {
+    let mut incorrect_answers = read_incorrect_answers(year, day, part);
+    incorrect_answers.push(answer.to_owned());
+    fs::write(
+        incorrect_answers_filename(year, day, part),
+        serde_json::to_string(&incorrect_answers).unwrap(),
+    )
+    .unwrap();
 }
 
 fn fetch_input(year: u32, day: u32) -> String {
@@ -153,89 +160,14 @@ fn fetch_input(year: u32, day: u32) -> String {
     response
 }
 
-fn fetch_examples(year: u32, day: u32) -> Vec<(String, String)> {
-    let url_path = format!("{}/day/{}", year, day);
-    let response = aoc_request(url_path);
-    println!("{}", &response);
-    let html = parse_html().one(response);
-    let mut examples = Vec::new();
-    let min_example_length = 5;
-    let example_candidates = html
-        .select("code")
-        .unwrap()
-        .map(|node| node.text_contents().trim().into())
-        .collect::<Vec<String>>();
-    let pre_tag_count = example_candidates.len();
-    let example_candidates = example_candidates
-        .into_iter()
-        .filter(|text| text.len() >= min_example_length)
-        .collect::<Vec<String>>();
-    println!(
-        "Found {} <pre> tags, of which {} are longer than {} characters.",
-        pre_tag_count,
-        example_candidates.len(),
-        min_example_length
-    );
-    for content in example_candidates {
-        println!("Possible example found:\n{}\nIf this is an example, paste the corresponding correct answer. Else, press 'Enter':", content);
-        let mut line = String::new();
-        io::stdin().lock().read_line(&mut line).unwrap();
-        let line = line.trim().to_owned();
-        if !line.is_empty() {
-            examples.push((content, line));
-        }
-    }
-    let mut lines = io::stdin().lock().lines();
-    while let Some(line) = lines.next() {
-        println!("Manual example input. 'Enter' to end. '```' to begin multiline example. Otherwise, single-line example:");
-        let mut content = String::new();
-        let line = line.unwrap().trim().to_owned();
-        if line.is_empty() {
-            break;
-        }
-        if !line.is_empty() {
-            // todo: cleanup if statement and handle ```
-            content = line;
-            if let Some(line) = lines.next() {
-                examples.push((content, line.unwrap().trim().to_owned()));
-            } else {
-                panic!("Failed to accept input for example")
-            }
-            continue;
-        }
-    }
-
-    examples
-}
-
-fn aoc_request(path: String) -> String {
-    let url = format!("https://adventofcode.com/{}", path);
-    let cookie = Cookie::new("session", load_session_cookie());
-    ureq::get(&url)
-        .set("Cookie", &cookie.to_string())
-        .call()
-        .unwrap()
-        .into_string()
-        .unwrap()
-}
-
-fn post_answer(year: u32, day: u32, part: u32, answer: &str) -> bool {
-    let url = format!("https://adventofcode.com/{}/day/{}/answer", year, day);
-    let cookie = Cookie::new("session", load_session_cookie());
-    let level = ((day - 1) * 2 + part).to_string();
-    let form_body: Vec<(&str, &str)> = vec![("level", &level), ("answer", answer)];
-    let response = ureq::post(&url)
-        .set("Cookie", &cookie.to_string())
-        .send_form(&form_body)
-        .unwrap()
-        .into_string()
-        .unwrap();
-    println!("{}", response);
-    !response.contains("That's not the right answer.")
-}
-
 #[test]
 fn test_fetch_input() {
     fetch_input(2018, 1);
     get_input(2018, 1);
+}
+
+#[test]
+fn test_incorrect_answer() {
+    write_answer_incorrect(2018, 1, 1, "0");
+    assert!(answer_is_known_incorrect(2018, 1, 1, "0"));
 }

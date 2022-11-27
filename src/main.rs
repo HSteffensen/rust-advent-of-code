@@ -1,13 +1,9 @@
-use crate::common::data::{get_examples, get_input};
+use common::solution::AocSolution;
 
 mod common;
-mod day01;
-mod day02;
+mod y2018;
+mod y2022;
 
 fn main() {
-    println!("Hello, world!");
-    let input = get_input(2018, 1);
-    println!("{}", input);
-    let examples = get_examples(2018, 1, 1);
-    println!("{:?}", examples);
+    y2018::d01::Part1::solve()
 }
