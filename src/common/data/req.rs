@@ -81,6 +81,7 @@ fn load_session_cookie() -> String {
             println!("No session cookie found. Please log in to https://adventofcode.com/ in your browser, open the browser console, copy the value of the 'session' cookie, and paste it here:");
             let mut line = String::new();
             io::stdin().lock().read_line(&mut line)?;
+            fs::create_dir("./data/").unwrap();
             fs::write(cookie_file_name, &line)?;
             Ok(line.trim().to_string())
         }).unwrap()
