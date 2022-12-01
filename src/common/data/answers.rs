@@ -32,21 +32,22 @@ fn fetch_correct_answer(year: u32, day: u32, part: u32) -> Option<String> {
     let url_path = format!("{}/day/{}", year, day);
     let response = aoc_request(url_path);
     let html = parse_html().one(response);
-    let part_answer = html.select("main > p").unwrap().nth((part - 1) as usize);
-    let p_contents = part_answer.as_ref().unwrap().text_contents();
-    assert!(
-        p_contents.starts_with("Your puzzle answer was"),
-        "{}\nExpected puzzle answer, but got the above.",
-        p_contents
-    );
-    part_answer.map(|p| {
-        p.as_node()
-            .select("code")
-            .unwrap()
-            .map(|node| node.text_contents().trim().to_owned())
-            .next()
-            .unwrap()
-    })
+    html.select("main > p")
+        .unwrap()
+        .filter(|element| {
+            element
+                .text_contents()
+                .starts_with("Your puzzle answer was")
+        })
+        .nth((part - 1) as usize)
+        .map(|p| {
+            p.as_node()
+                .select("code")
+                .unwrap()
+                .map(|node| node.text_contents().trim().to_owned())
+                .next()
+                .unwrap()
+        })
 }
 
 fn read_incorrect_answers(year: u32, day: u32, part: u32) -> Vec<String> {
@@ -93,6 +94,15 @@ fn test_incorrect_answer() {
 
 #[test]
 fn test_correct_answer() {
+    // Note: this test assumes 2018 is complete up until day 3 part 1
     assert_eq!(fetch_correct_answer(2018, 1, 1), Some("582".to_owned()));
+    assert_eq!(fetch_correct_answer(2018, 1, 2), Some("488".to_owned()));
+    assert_eq!(fetch_correct_answer(2018, 2, 1), Some("4980".to_owned()));
+    assert_eq!(
+        fetch_correct_answer(2018, 2, 2),
+        Some("qysdtrkloagnfozuwujmhrbvx".to_owned())
+    );
     assert_eq!(fetch_correct_answer(2018, 3, 1), Some("101469".to_owned()));
+    assert_eq!(fetch_correct_answer(2018, 3, 2), None);
+    assert_eq!(fetch_correct_answer(2018, 4, 1), None);
 }
