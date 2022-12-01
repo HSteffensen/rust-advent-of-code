@@ -6,13 +6,11 @@ use std::{
 };
 
 use chrono::{DateTime, Duration, Utc};
-use ureq::Cookie;
+use ureq::{Cookie, Request};
 
 pub fn aoc_request(path: String) -> String {
     let url = format!("https://adventofcode.com/{}", path);
-    let cookie = Cookie::new("session", load_session_cookie());
-    ureq::get(&url)
-        .set("Cookie", &cookie.to_string())
+    set_headers(ureq::get(&url))
         .call()
         .unwrap()
         .into_string()
@@ -22,12 +20,10 @@ pub fn aoc_request(path: String) -> String {
 pub fn post_answer(year: u32, day: u32, part: u32, answer: &str) -> bool {
     check_one_minute_between_submissions();
     let url = format!("https://adventofcode.com/{}/day/{}/answer", year, day);
-    let cookie = Cookie::new("session", load_session_cookie());
     let level = part.to_string();
     let form_body: Vec<(&str, &str)> = vec![("level", &level), ("answer", answer)];
     println!("Posting answer {} to {}", answer, url);
-    let response = ureq::post(&url)
-        .set("Cookie", &cookie.to_string())
+    let response = set_headers(ureq::post(&url))
         .send_form(&form_body)
         .unwrap()
         .into_string()
@@ -51,6 +47,14 @@ pub fn post_answer(year: u32, day: u32, part: u32, answer: &str) -> bool {
             response
         );
     }
+}
+
+fn set_headers(request: Request) -> Request {
+    let cookie = Cookie::new("session", load_session_cookie());
+    request.set("Cookie", &cookie.to_string()).set(
+        "User-Agent",
+        "https://github.com/HSteffensen/rust-advent-of-code by henry@steffensenfamily.com",
+    )
 }
 
 fn check_one_minute_between_submissions() {

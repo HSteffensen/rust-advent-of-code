@@ -1,6 +1,6 @@
 use std::{error::Error, fs};
 
-use crate::common::data::answers::{answer_is_known_incorrect, check_answer};
+use crate::common::data::answers::check_answer;
 use crate::common::data::{examples::fetch_examples, req::aoc_request};
 
 mod answers;
@@ -62,14 +62,6 @@ pub fn submit_answer(year: u32, day: u32, part: u32, answer: &str) -> bool {
     assert!((2015..3000).contains(&year));
     assert!((1..=25).contains(&day));
     assert!((1..=2).contains(&part));
-
-    if answer_is_known_incorrect(year, day, part, answer) {
-        println!(
-            "Already known to be incorrect for {} day {} part {}: `{}`",
-            year, day, part, answer
-        );
-        return false;
-    }
 
     if check_answer(year, day, part, answer) {
         println!(
