@@ -45,8 +45,9 @@ impl AocSolution for Part2 {
     fn implementation(input: &str) -> String {
         let elves_foods = parse_input(input);
         let elves_sums = elves_foods.iter().map(|foods| foods.iter().sum::<u64>());
-        let mut heap = BinaryHeap::from_iter(elves_sums);
-        (heap.pop().unwrap() + heap.pop().unwrap() + heap.pop().unwrap()).to_string()
+        let heap = BinaryHeap::from_iter(elves_sums);
+        let max_3 = heap.into_iter().take(3);
+        max_3.sum::<u64>().to_string()
     }
 }
 
