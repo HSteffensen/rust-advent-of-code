@@ -63,7 +63,7 @@ pub fn submit_answer(year: u32, day: u32, part: u32, answer: &str) -> bool {
     assert!((1..=25).contains(&day));
     assert!((1..=2).contains(&part));
 
-    if check_answer(year, day, part, answer) {
+    if check_answer(year, day, part, answer).unwrap() {
         println!(
             "Correct answer submitted for {} day {} part {}: `{}`!",
             year, day, part, answer
@@ -80,7 +80,7 @@ pub fn submit_answer(year: u32, day: u32, part: u32, answer: &str) -> bool {
 
 fn fetch_input(year: u32, day: u32) -> String {
     let url_path = format!("{}/day/{}/input", year, day);
-    let response = aoc_request(url_path);
+    let response = aoc_request(url_path).unwrap();
     assert!(
         !response.starts_with("Please don't"),
         "{} day {} has no input",

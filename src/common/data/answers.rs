@@ -2,12 +2,12 @@ use std::{error::Error, fs};
 
 use kuchiki::{parse_html, traits::TendrilSink};
 
-use crate::common::data::req::aoc_request;
+use crate::common::{data::req::aoc_request, SimpleResult};
 
 use super::req::post_answer;
 
-pub fn check_answer(year: u32, day: u32, part: u32, answer: &str) -> bool {
-    if answer_is_known_incorrect(year, day, part, answer) {
+pub fn check_answer(year: u32, day: u32, part: u32, answer: &str) -> SimpleResult<bool> {
+    Ok(if answer_is_known_incorrect(year, day, part, answer)? {
         false
     } else if let Some(correct_answer) = fetch_correct_answer(year, day, part) {
         println!(
@@ -15,22 +15,22 @@ pub fn check_answer(year: u32, day: u32, part: u32, answer: &str) -> bool {
             correct_answer
         );
         correct_answer == answer
-    } else if post_answer(year, day, part, answer) {
+    } else if post_answer(year, day, part, answer)? {
         true
     } else {
         write_answer_incorrect(year, day, part, answer);
         false
-    }
+    })
 }
 
-fn answer_is_known_incorrect(year: u32, day: u32, part: u32, answer: &str) -> bool {
+fn answer_is_known_incorrect(year: u32, day: u32, part: u32, answer: &str) -> SimpleResult<bool> {
     let known_incorrect_answers = read_incorrect_answers(year, day, part);
-    known_incorrect_answers.contains(&answer.to_owned())
+    Ok(known_incorrect_answers.contains(&answer.to_owned()))
 }
 
 fn fetch_correct_answer(year: u32, day: u32, part: u32) -> Option<String> {
     let url_path = format!("{}/day/{}", year, day);
-    let response = aoc_request(url_path);
+    let response = aoc_request(url_path).unwrap();
     let html = parse_html().one(response);
     html.select("main > p")
         .unwrap()
@@ -87,9 +87,10 @@ fn incorrect_answers_filename(year: u32, day: u32, part: u32) -> String {
 }
 
 #[test]
-fn test_incorrect_answer() {
+fn test_incorrect_answer() -> SimpleResult<()> {
     write_answer_incorrect(2018, 1, 1, "0");
-    assert!(answer_is_known_incorrect(2018, 1, 1, "0"));
+    assert!(answer_is_known_incorrect(2018, 1, 1, "0")?);
+    Ok(())
 }
 
 #[test]

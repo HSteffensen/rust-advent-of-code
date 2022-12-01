@@ -6,7 +6,7 @@ use crate::common::data::req::aoc_request;
 
 pub fn fetch_examples(year: u32, day: u32, part: u32) -> Vec<(String, String)> {
     let url_path = format!("{}/day/{}", year, day);
-    let response = aoc_request(url_path);
+    let response = aoc_request(url_path).unwrap();
     let html = parse_html().one(response);
     let mut examples = Vec::new();
     let min_example_length = 5;
