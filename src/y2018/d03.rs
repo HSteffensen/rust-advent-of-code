@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 use regex::Regex;
 
@@ -32,14 +32,14 @@ impl AocSolution for Part2 {
     const DAY: u32 = D;
     const PART: u32 = 2;
 
-    fn implementation(input: &str) -> String {
-        let fabric = parse_fabric_claims(input);
-        let overlapping_claim_ids = HashSet::from_iter(
-            fabric
-                .iter()
-                .filter(|(_, v)| v.len() > 1)
-                .flat_map(|(_, v)| v),
-        );
+    fn implementation(_input: &str) -> String {
+        // let fabric = parse_fabric_claims(input);
+        // let overlapping_claim_ids = HashSet::from_iter(
+        //     fabric
+        //         .iter()
+        //         .filter(|(_, v)| v.len() > 1)
+        //         .flat_map(|(_, v)| v),
+        // );
         // let all
         todo!()
     }
