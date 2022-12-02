@@ -62,7 +62,7 @@ impl AocSolution for Part2 {
                 }
             }
         }
-        panic!("Failed to find a match.")
+        unreachable!("Should always find a match.")
     }
 }
 

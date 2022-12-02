@@ -25,7 +25,7 @@ fn opponent_shape(abc: char) -> Shape {
         'A' => Shape::Rock,
         'B' => Shape::Paper,
         'C' => Shape::Scissors,
-        _ => panic!("Unexpected opponent, must be A B or C, got: {}", abc),
+        _ => unreachable!("Unexpected opponent, must be A B or C, got: {}", abc),
     }
 }
 
@@ -34,7 +34,7 @@ fn self_shape(xyz: char) -> Shape {
         'X' => Shape::Rock,
         'Y' => Shape::Paper,
         'Z' => Shape::Scissors,
-        _ => panic!("Unexpected self, must be X Y or Z, got: {}", xyz),
+        _ => unreachable!("Unexpected self, must be X Y or Z, got: {}", xyz),
     }
 }
 
@@ -111,7 +111,7 @@ fn desired_outcome(xyz: char) -> Outcome {
         'X' => Outcome::Loss,
         'Y' => Outcome::Tie,
         'Z' => Outcome::Win,
-        _ => panic!("Unexpected self, must be X Y or Z, got: {}", xyz),
+        _ => unreachable!("Unexpected self, must be X Y or Z, got: {}", xyz),
     }
 }
 
