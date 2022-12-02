@@ -60,7 +60,7 @@ fn parse_fabric_claims(input: &str) -> HashMap<(u32, u32), Vec<u32>> {
                 fabric
                     .entry((x, y))
                     .and_modify(|v: &mut Vec<u32>| v.push(id))
-                    .or_insert(vec![id]);
+                    .or_insert_with(|| vec![id]);
             }
         }
     }
