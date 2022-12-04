@@ -49,7 +49,7 @@ pub fn get_examples(year: u32, day: u32, part: u32) -> Vec<(String, String)> {
                 "Couldn't find examples file {}, fetching from adventofcode.com",
                 examples_filename
             );
-            let fetched_input = fetch_examples(year, day, part);
+            let fetched_input = fetch_examples(year, day, part)?;
             let examples_str = serde_json::to_string(&fetched_input).unwrap();
             fs::create_dir_all(&data_folder).unwrap();
             fs::write(examples_filename, &examples_str).unwrap();

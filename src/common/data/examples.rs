@@ -2,11 +2,11 @@ use std::io::{self, BufRead};
 
 use kuchiki::{parse_html, traits::TendrilSink};
 
-use crate::common::data::req::aoc_request;
+use crate::common::{data::req::aoc_request, SimpleResult};
 
-pub fn fetch_examples(year: u32, day: u32, part: u32) -> Vec<(String, String)> {
+pub fn fetch_examples(year: u32, day: u32, part: u32) -> SimpleResult<Vec<(String, String)>> {
     let url_path = format!("{}/day/{}", year, day);
-    let response = aoc_request(url_path).unwrap();
+    let response = aoc_request(url_path)?;
     let html = parse_html().one(response);
     let mut examples = Vec::new();
     let min_example_length = 5;
@@ -34,11 +34,11 @@ pub fn fetch_examples(year: u32, day: u32, part: u32) -> Vec<(String, String)> {
     for content in example_candidates {
         println!("Possible example found:\n{}\nIf this is an example, paste the corresponding correct answer. Else, press 'Enter':", content);
         let mut line = String::new();
-        io::stdin().lock().read_line(&mut line).unwrap();
+        io::stdin().lock().read_line(&mut line)?;
         let line = line.trim().to_owned();
         if !line.is_empty() {
             examples.push((content, line));
         }
     }
-    examples
+    Ok(examples)
 }
