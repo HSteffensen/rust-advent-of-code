@@ -47,7 +47,7 @@ fn parse_stacks(input: &str) -> Vec<Vec<char>> {
 
 #[test]
 fn test_parse_stacks() {
-    let examples = Part1::get_examples();
+    let examples = Part1::get_examples().unwrap();
     for (example, _) in examples {
         let (input_stacks, input_moves) = split_input(&example);
         println!("stacks---\n{}\n\nmoves---\n{}", input_stacks, input_moves);
