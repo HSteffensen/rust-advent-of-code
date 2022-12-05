@@ -14,13 +14,45 @@ struct MoveOrder {
     to_stack_id: usize,
 }
 
-fn parse_input(input: &str) -> (Vec<Vec<char>>, Vec<MoveOrder>) {
+fn split_input(input: &str) -> (&str, &str) {
     let (input_stacks, input_moves) = input.split_once("\n\n").unwrap();
+    (input_stacks, input_moves)
+}
+
+fn parse_input(input: &str) -> (Vec<Vec<char>>, Vec<MoveOrder>) {
+    let (input_stacks, input_moves) = split_input(input);
     (parse_stacks(input_stacks), parse_moves(input_moves))
 }
 
 fn parse_stacks(input: &str) -> Vec<Vec<char>> {
-    todo!()
+    let mut stacks = Vec::new();
+    let mut lines_rev = input.lines().rev();
+    let stack_numbers_line = &lines_rev.next().unwrap();
+    for _ in stack_numbers_line.split_whitespace() {
+        stacks.push(Vec::new());
+    }
+    for line in lines_rev {
+        let mut chars = line.chars();
+        chars.next();
+        let mut chars = chars.step_by(4);
+        for stack in stacks.iter_mut() {
+            let c = chars.next().unwrap();
+            if c != ' ' {
+                stack.push(c);
+            }
+        }
+    }
+    stacks
+}
+
+#[test]
+fn test_parse_stacks() {
+    let examples = Part1::get_examples();
+    for (example, _) in examples {
+        let (input_stacks, input_moves) = split_input(&example);
+        println!("stacks---\n{}\n\nmoves---\n{}", input_stacks, input_moves);
+        println!("{:?}", parse_stacks(input_stacks))
+    }
 }
 
 fn parse_moves(input: &str) -> Vec<MoveOrder> {
@@ -45,23 +77,21 @@ impl AocSolution for Part1 {
     const PART: u32 = 1;
 
     fn implementation(input: &str) -> String {
-        let (mut stacks, mut moves) = parse_input(input);
+        let (mut stacks, moves) = parse_input(input);
         for move_order in moves {
             for _ in 0..move_order.amount {
                 let item = stacks
-                    .iter()
-                    .nth(move_order.from_stack_id)
+                    .get_mut(move_order.from_stack_id - 1)
                     .unwrap()
                     .pop()
                     .unwrap();
                 stacks
-                    .iter()
-                    .nth(move_order.to_stack_id)
+                    .get_mut(move_order.to_stack_id - 1)
                     .unwrap()
                     .push(item);
             }
         }
-        todo!()
+        stacks.iter().map(|stack| stack.last().unwrap()).collect()
     }
 }
 
@@ -71,7 +101,22 @@ impl AocSolution for Part2 {
     const PART: u32 = 2;
 
     fn implementation(input: &str) -> String {
-        todo!()
+        let (mut stacks, moves) = parse_input(input);
+        for move_order in moves {
+            let mut crane_holding = Vec::new();
+            for _ in 0..move_order.amount {
+                let item = stacks
+                    .get_mut(move_order.from_stack_id - 1)
+                    .unwrap()
+                    .pop()
+                    .unwrap();
+                crane_holding.push(item);
+            }
+            for c in crane_holding.iter().rev() {
+                stacks.get_mut(move_order.to_stack_id - 1).unwrap().push(*c);
+            }
+        }
+        stacks.iter().map(|stack| stack.last().unwrap()).collect()
     }
 }
 
