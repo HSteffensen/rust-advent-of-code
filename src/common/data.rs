@@ -92,6 +92,6 @@ fn fetch_input(year: u32, day: u32) -> SimpleResult<String> {
 
 #[test]
 fn test_fetch_input() {
-    fetch_input(2018, 1);
-    get_input(2018, 1);
+    fetch_input(2018, 1).unwrap();
+    get_input(2018, 1).unwrap();
 }

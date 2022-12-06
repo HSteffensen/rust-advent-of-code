@@ -1,7 +1,4 @@
-use super::{
-    data::{get_examples, get_input, submit_answer},
-    SimpleResult,
-};
+use super::data::{get_examples, get_input, submit_answer};
 
 pub trait AocSolution {
     const YEAR: u32;
@@ -10,8 +7,8 @@ pub trait AocSolution {
 
     fn implementation(input: &str) -> String;
 
-    fn solve() -> SimpleResult<()> {
-        let examples = Self::get_examples()?;
+    fn solve() {
+        let examples = Self::get_examples();
         for (i, (example, expected)) in examples.iter().enumerate() {
             let actual = Self::implementation(example);
             if &actual == expected {
@@ -27,10 +24,9 @@ pub trait AocSolution {
                 )
             }
         }
-        let input = get_input(Self::YEAR, Self::DAY)?;
+        let input = get_input(Self::YEAR, Self::DAY).unwrap();
         let answer = Self::implementation(&input);
-        submit_answer(Self::YEAR, Self::DAY, Self::PART, &answer)?;
-        Ok(())
+        submit_answer(Self::YEAR, Self::DAY, Self::PART, &answer).unwrap();
     }
 
     fn ydp() -> String {
@@ -41,12 +37,13 @@ pub trait AocSolution {
         example.to_string()
     }
 
-    fn get_examples() -> SimpleResult<Vec<(String, String)>> {
-        Ok(get_examples(Self::YEAR, Self::DAY, Self::PART)?
+    fn get_examples() -> Vec<(String, String)> {
+        get_examples(Self::YEAR, Self::DAY, Self::PART)
+            .unwrap()
             .iter()
             .map(|(example, expected)| -> (String, String) {
                 (Self::map_example_input(example), expected.to_string())
             })
-            .collect())
+            .collect()
     }
 }
