@@ -31,7 +31,14 @@ impl AocSolution for Part2 {
     const PART: u32 = 2;
 
     fn implementation(input: &str) -> String {
-        todo!()
+        let size = 14;
+        for i in 0..input.len() - size {
+            let input14 = &input[i..i + size];
+            if HashSet::<char>::from_iter(input14.chars()).len() == size {
+                return (i + size).to_string();
+            }
+        }
+        unreachable!()
     }
 }
 
