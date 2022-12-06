@@ -21,7 +21,7 @@ pub fn post_answer(year: u32, day: u32, part: u32, answer: &str) -> SimpleResult
     let url = format!("https://adventofcode.com/{}/day/{}/answer", year, day);
     let level = part.to_string();
     let form_body: Vec<(&str, &str)> = vec![("level", &level), ("answer", answer)];
-    println!("Posting answer {} to {}", answer, url);
+    println!("Posting answer `{}` to {}", answer, url);
     let response = set_headers(ureq::post(&url))?.send_form(&form_body)?;
     let response_text = response.into_string()?;
     if response_text.contains("That's the right answer") {

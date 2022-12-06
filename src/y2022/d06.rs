@@ -61,3 +61,47 @@ fn p2_pull_examples() {
 fn p2_run() {
     Part2::solve();
 }
+
+struct Part1Impl2 {}
+struct Part2Impl2 {}
+
+impl AocSolution for Part1Impl2 {
+    const YEAR: u32 = Y;
+    const DAY: u32 = D;
+    const PART: u32 = 1;
+
+    fn implementation(input: &str) -> String {
+        for (i, window) in input.chars().collect_vec().windows(4).enumerate() {
+            if window.iter().all_unique() {
+                return (i + 4).to_string();
+            }
+        }
+        unreachable!()
+    }
+}
+
+impl AocSolution for Part2Impl2 {
+    const YEAR: u32 = Y;
+    const DAY: u32 = D;
+    const PART: u32 = 2;
+
+    fn implementation(input: &str) -> String {
+        let size = 14;
+        for (i, window) in input.chars().collect_vec().windows(size).enumerate() {
+            if window.iter().all_unique() {
+                return (i + size).to_string();
+            }
+        }
+        unreachable!()
+    }
+}
+
+#[test]
+fn p1_impl2_run() {
+    Part2Impl2::solve();
+}
+
+#[test]
+fn p2_impl2_run() {
+    Part2Impl2::solve();
+}
