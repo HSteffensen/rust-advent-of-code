@@ -15,7 +15,7 @@ pub trait AocSolution {
                 println!("{}: Example {} passed.", Self::ydp(), i);
             } else {
                 panic!(
-                    "{}: Example {} failed.\nExample input:\n{}\nExpected: '{}'\nGot: '{}'",
+                    "\n{}: Example {} failed.\nExample input:\n{}\nExpected: `{}`\nGot: `{}`\n",
                     Self::ydp(),
                     i,
                     example,

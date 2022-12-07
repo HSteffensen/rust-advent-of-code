@@ -129,3 +129,77 @@ fn p2_pull_examples() {
 fn p2_run() {
     Part2::solve();
 }
+
+struct Part1Impl2 {}
+struct Part2Impl2 {}
+
+fn directory_sizes<'a>(input: &mut impl Iterator<Item = &'a str>) -> Vec<u64> {
+    let mut subdirs = Vec::new();
+    let mut dir_size = 0;
+    while let Some(line) = input.next() {
+        let line: Vec<&str> = line.split_whitespace().collect();
+        match line[..] {
+            ["$", "cd", ".."] => break,
+            ["$", "cd", _] => {
+                let mut subdir_sizes = directory_sizes(input);
+                dir_size += subdir_sizes.last().unwrap();
+                subdirs.append(&mut subdir_sizes);
+            }
+            ["$", "ls"] => (),
+            ["dir", _] => (),
+            [size, _] => {
+                dir_size += size.parse::<u64>().unwrap();
+            }
+            _ => (),
+        }
+    }
+    subdirs.push(dir_size);
+    subdirs
+}
+
+impl AocSolution for Part1Impl2 {
+    const YEAR: u32 = Y;
+    const DAY: u32 = D;
+    const PART: u32 = 1;
+
+    fn implementation(input: &str) -> String {
+        let sizes = directory_sizes(&mut input.lines());
+        println!("{:?}", &sizes);
+        sizes
+            .iter()
+            .filter(|size| **size <= 100000)
+            .sum::<u64>()
+            .to_string()
+    }
+}
+
+impl AocSolution for Part2Impl2 {
+    const YEAR: u32 = Y;
+    const DAY: u32 = D;
+    const PART: u32 = 2;
+
+    fn implementation(input: &str) -> String {
+        let sizes = directory_sizes(&mut input.lines());
+        let rootdir_size = sizes.iter().max().unwrap();
+        let fs_size = 70000000;
+        let needed_space = 30000000;
+        let unused_space = fs_size - rootdir_size;
+        let space_to_free = needed_space - unused_space;
+        sizes
+            .iter()
+            .filter(|size| **size >= space_to_free)
+            .min()
+            .unwrap()
+            .to_string()
+    }
+}
+
+#[test]
+fn p1_impl2_run() {
+    Part1Impl2::solve();
+}
+
+#[test]
+fn p2_impl2_run() {
+    Part2Impl2::solve();
+}
