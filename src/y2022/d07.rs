@@ -1,4 +1,4 @@
-use std::str::Lines;
+use std::{slice::Iter, str::Lines};
 
 use crate::common::solution::AocSolution;
 
@@ -9,24 +9,54 @@ struct Part2 {}
 const D: u32 = 7;
 
 enum FsObject {
-    Dir(String, Vec<FsObject>),
+    Dir(String, Vec<FsObject>, usize),
     File(String, usize),
 }
 
 fn parse_input(input: &str) -> FsObject {
     let mut lines = input.lines();
-
-    todo!()
+    assert_eq!(lines.next().unwrap(), "$ cd /");
+    parse_dir_input("/", &mut lines)
 }
 
-fn parse_remaining_input(lines: &mut Lines) -> Option<FsObject> {
-    if let Some(line) = lines.next() {
-        if line.starts_with("$ cd") {
-        } else if line.starts_with("$ ls") {
+fn parse_dir_input(dir_name: &str, lines: &mut Lines) -> FsObject {
+    assert_eq!(lines.next().unwrap(), "$ ls");
+    let mut inner_fs_objects = Vec::new();
+    while let Some(line) = lines.next() {
+        if line == "$ cd .." {
+            break;
+        } else if line.starts_with("$ cd ") {
+            let subdir = parse_dir_input(line.strip_prefix("$ cd ").unwrap(), lines);
+            inner_fs_objects.push(subdir);
         } else {
+            let (size, name) = line.split_once(' ').unwrap();
+            if size != "dir" {
+                let file = FsObject::File(name.to_owned(), size.parse().unwrap());
+                inner_fs_objects.push(file);
+            }
         }
-    } else {
-        None
+    }
+    let dir_size = inner_fs_objects
+        .iter()
+        .map(|item| match item {
+            FsObject::Dir(_, _, s) => s,
+            FsObject::File(_, s) => s,
+        })
+        .sum();
+    FsObject::Dir(dir_name.to_owned(), inner_fs_objects, dir_size)
+}
+
+fn sum_objects_at_most(limit: usize, object: &FsObject) -> usize {
+    match object {
+        FsObject::Dir(_, contents, s) => {
+            let contribution = if *s <= limit { *s } else { 0 };
+            contribution
+                + contents
+                    .iter()
+                    .map(|o| sum_objects_at_most(limit, o))
+                    .sum::<usize>()
+        }
+        FsObject::File(_, _) => 0,
     }
 }
 
@@ -36,7 +66,30 @@ impl AocSolution for Part1 {
     const PART: u32 = 1;
 
     fn implementation(input: &str) -> String {
-        todo!()
+        sum_objects_at_most(100000, &parse_input(input)).to_string()
+    }
+}
+
+fn smallest_dir_at_least(
+    min_size: usize,
+    mut best_so_far: usize,
+    object: &FsObject,
+) -> Option<usize> {
+    match object {
+        FsObject::Dir(_, contents, s) => {
+            best_so_far = if *s >= min_size && *s < best_so_far {
+                *s
+            } else {
+                best_so_far
+            };
+            for obj in contents {
+                if let Some(result) = smallest_dir_at_least(min_size, best_so_far, obj) {
+                    best_so_far = result;
+                }
+            }
+            Some(best_so_far)
+        }
+        FsObject::File(_, _) => None,
     }
 }
 
@@ -46,7 +99,14 @@ impl AocSolution for Part2 {
     const PART: u32 = 2;
 
     fn implementation(input: &str) -> String {
-        todo!()
+        let rootdir = parse_input(input);
+        let FsObject::Dir(_, _, rootdir_size) = rootdir else {unreachable!()};
+        let fs_size = 70000000;
+        let needed_space = 30000000;
+        let unused_space = fs_size - rootdir_size;
+        let space_to_free = needed_space - unused_space;
+        let Some(answer) = smallest_dir_at_least(space_to_free, rootdir_size, &rootdir) else {unreachable!()};
+        answer.to_string()
     }
 }
 
