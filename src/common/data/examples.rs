@@ -9,7 +9,6 @@ pub fn fetch_examples(year: u32, day: u32, part: u32) -> SimpleResult<Vec<(Strin
     let response = aoc_request(url_path)?;
     let html = parse_html().one(response);
     let mut examples = Vec::new();
-    let min_example_length = 5;
     let example_candidates = html
         .select("article.day-desc")
         .unwrap()
@@ -23,13 +22,12 @@ pub fn fetch_examples(year: u32, day: u32, part: u32) -> SimpleResult<Vec<(Strin
     let pre_tag_count = example_candidates.len();
     let example_candidates = example_candidates
         .into_iter()
-        .filter(|text| text.len() >= min_example_length)
+        .filter(|text| text.contains('\n'))
         .collect::<Vec<String>>();
     println!(
-        "Found {} <code> tags, of which {} are longer than {} characters.",
+        "Found {} <code> tags, of which {} contain a newline.",
         pre_tag_count,
-        example_candidates.len(),
-        min_example_length
+        example_candidates.len()
     );
     for content in example_candidates {
         println!("Possible example found:\n{}\nIf this is an example, paste the corresponding correct answer. Else, press 'Enter':", content);
