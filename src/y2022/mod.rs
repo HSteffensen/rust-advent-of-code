@@ -5,5 +5,7 @@ mod d04;
 mod d05;
 mod d06;
 mod d07;
+mod d08;
+
 
 const Y: u32 = 2022;

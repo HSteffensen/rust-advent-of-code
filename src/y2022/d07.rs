@@ -1,4 +1,4 @@
-use std::{slice::Iter, str::Lines};
+use std::str::Lines;
 
 use crate::common::solution::AocSolution;
 
