@@ -89,33 +89,31 @@ fn is_visible(tree: &Tree) -> bool {
     tree.visible_north || tree.visible_west || tree.visible_south || tree.visible_east
 }
 
-fn print_tree(trees: &TreeGrid) {
-    println!("tree:");
-    for row in trees {
-        let row_str: String = row.iter().map(|tree| tree.height.to_string()).collect();
-        println!("{}", row_str);
-    }
-}
-
-fn print_visibilities(trees: &TreeGrid) {
-    println!("tree visibilities:");
-    for row in trees {
-        let row_str: String = row
-            .iter()
-            .map(|tree| if is_visible(tree) { '*' } else { '.' })
-            .collect();
-        println!("{}", row_str);
-    }
-}
-
 #[test]
 fn test_visibilities() {
     let examples = Part1::get_examples();
     let (example, _) = examples.first().unwrap();
     let mut trees = parse_input(example);
-    print_tree(&trees);
+    {
+        let trees = &trees;
+        println!("tree:");
+        for row in trees {
+            let row_str: String = row.iter().map(|tree| tree.height.to_string()).collect();
+            println!("{}", row_str);
+        }
+    };
     set_visibilities(&mut trees);
-    print_visibilities(&trees);
+    {
+        let trees = &trees;
+        println!("tree visibilities:");
+        for row in trees {
+            let row_str: String = row
+                .iter()
+                .map(|tree| if is_visible(tree) { '*' } else { '.' })
+                .collect();
+            println!("{}", row_str);
+        }
+    };
 }
 
 impl AocSolution for Part1 {
