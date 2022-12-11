@@ -26,7 +26,18 @@ pub trait AocSolution {
         }
         let input = get_input(Self::YEAR, Self::DAY).unwrap();
         let answer = Self::implementation(&input);
-        submit_answer(Self::YEAR, Self::DAY, Self::PART, &answer).unwrap();
+        if Self::do_post_answer() {
+            submit_answer(Self::YEAR, Self::DAY, Self::PART, &answer).unwrap();
+        } else {
+            println!(
+                "Printing answer rather than posting to the AoC website:\n{}",
+                answer
+            );
+        }
+    }
+
+    fn do_post_answer() -> bool {
+        true
     }
 
     fn ydp() -> String {
