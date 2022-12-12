@@ -102,10 +102,10 @@ impl AocSolution for Part2 {
 
     fn implementation(input: &str) -> String {
         let grid = parse_input(input);
-        grid.grid
-            .iter()
+        (0..42)
+            .filter_map(|i| grid.grid.get(&(0, i)).map(|h| ((0, i), h)))
             .filter(|(_, h)| **h == 0)
-            .map(|(p, _)| grid.path_length(*p))
+            .map(|(p, _)| grid.path_length(p))
             .min()
             .unwrap()
             .to_string()
