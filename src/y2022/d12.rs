@@ -32,11 +32,15 @@ impl HeightGrid {
         result
     }
 
-    fn path_length(&self) -> u32 {
+    fn path_length_start_to_end(&self) -> u32 {
+        self.path_length(self.start)
+    }
+
+    fn path_length(&self, start: Point2d) -> u32 {
         let mut queue = LinkedList::new();
-        queue.push_back((self.start, 0));
+        queue.push_back((start, 0));
         let mut visited: HashSet<Point2d> = HashSet::new();
-        visited.insert(self.start);
+        visited.insert(start);
         while let Some((p, len)) = queue.pop_front() {
             let neighbors = self.neighbors(p);
             let new_len = len + 1;
@@ -49,7 +53,7 @@ impl HeightGrid {
                 }
             }
         }
-        unreachable!()
+        u32::MAX
     }
 }
 
@@ -87,7 +91,7 @@ impl AocSolution for Part1 {
 
     fn implementation(input: &str) -> String {
         let grid = parse_input(input);
-        grid.path_length().to_string()
+        grid.path_length_start_to_end().to_string()
     }
 }
 
@@ -97,7 +101,14 @@ impl AocSolution for Part2 {
     const PART: u32 = 2;
 
     fn implementation(input: &str) -> String {
-        todo!()
+        let grid = parse_input(input);
+        grid.grid
+            .iter()
+            .filter(|(_, h)| **h == 0)
+            .map(|(p, _)| grid.path_length(*p))
+            .min()
+            .unwrap()
+            .to_string()
     }
 }
 
