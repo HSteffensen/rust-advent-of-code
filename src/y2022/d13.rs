@@ -1,5 +1,16 @@
 use std::{num::ParseIntError, str::FromStr};
 
+use anyhow::{anyhow, Error, Result};
+use nom::{
+    branch::alt,
+    bytes::complete::tag,
+    character::complete::i32,
+    combinator::{all_consuming, map},
+    multi::separated_list0,
+    sequence::delimited,
+    IResult,
+};
+
 use crate::common::solution::AocSolution;
 
 use super::Y;
@@ -20,6 +31,21 @@ enum ParsePacketError {
     ExpectedListDelimiterOrEnd(Option<char>, usize),
     ExpectedIntStart(Option<char>, usize),
     ParseIntError(ParseIntError),
+}
+
+fn parse_packet(packet_str: &str) -> IResult<&str, Packet> {
+    alt((parse_packet_int, parse_packet_list))(packet_str)
+}
+
+fn parse_packet_int(packet_str: &str) -> IResult<&str, Packet> {
+    map(i32, Packet::Int)(packet_str)
+}
+
+fn parse_packet_list(packet_str: &str) -> IResult<&str, Packet> {
+    map(
+        delimited(tag("["), separated_list0(tag(","), parse_packet), tag("]")),
+        Packet::List,
+    )(packet_str)
 }
 
 fn packet_list_from_chars(input: &str, index: &mut usize) -> Result<Packet, ParsePacketError> {
@@ -109,11 +135,35 @@ fn test_packet_list() {
     );
 }
 
-impl FromStr for Packet {
-    type Err = ParsePacketError;
+#[test]
+fn test_nom_parser() {
+    assert_eq!(
+        parse_packet("[1,2,10]").unwrap().1,
+        Packet::List(vec![Packet::Int(1), Packet::Int(2), Packet::Int(10)])
+    );
+    assert_eq!(
+        parse_packet("[1,2,[18,42],10]").unwrap().1,
+        Packet::List(vec![
+            Packet::Int(1),
+            Packet::Int(2),
+            Packet::List(vec![Packet::Int(18), Packet::Int(42)]),
+            Packet::Int(10)
+        ])
+    );
+    assert_eq!(parse_packet("[]").unwrap().1, Packet::List(vec![]));
+    assert_eq!(
+        parse_packet("[[[]]]").unwrap().1,
+        Packet::List(vec![Packet::List(vec![Packet::List(vec![]),]),])
+    );
+}
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        packet_from_str(s, &mut 0)
+impl FromStr for Packet {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self> {
+        all_consuming(parse_packet)(s)
+            .map(|(_, packet)| packet)
+            .map_err(|e| anyhow!("Failed to parse packet: {}", e))
     }
 }
 
@@ -144,7 +194,7 @@ fn parse_input(input: &str) -> Vec<(Packet, Packet)> {
     let pairs = input.split("\n\n");
     let mut result = vec![];
     for (left, right) in pairs.map(|s| s.split_once('\n').unwrap()) {
-        result.push((left.parse().unwrap(), right.parse().unwrap()));
+        result.push((left.trim().parse().unwrap(), right.trim().parse().unwrap()));
     }
     result
 }
