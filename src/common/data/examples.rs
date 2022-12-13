@@ -20,7 +20,7 @@ pub fn fetch_examples(year: u32, day: u32, part: u32) -> SimpleResult<Vec<(Strin
         .map(|node| node.text_contents().trim().into())
         .collect::<Vec<String>>();
     let pre_tag_count = example_candidates.len();
-    let example_candidates = example_candidates
+    let mut example_candidates = example_candidates
         .into_iter()
         .filter(|text| text.contains('\n'))
         .collect::<Vec<String>>();
@@ -29,6 +29,12 @@ pub fn fetch_examples(year: u32, day: u32, part: u32) -> SimpleResult<Vec<(Strin
         pre_tag_count,
         example_candidates.len()
     );
+    if part == 2 {
+        let part1_examples = fetch_examples(year, day, 1)?;
+        let mut part1_example_inputs: Vec<String> =
+            part1_examples.iter().map(|(e, _)| e.to_owned()).collect();
+        example_candidates.append(&mut part1_example_inputs);
+    }
     for content in example_candidates {
         println!("Possible example found:\n{}\nIf this is an example, paste the corresponding correct answer. Else, press 'Enter':", content);
         let mut line = String::new();
