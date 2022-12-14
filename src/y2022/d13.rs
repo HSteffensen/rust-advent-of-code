@@ -1,6 +1,7 @@
-use std::{num::ParseIntError, str::FromStr};
+use std::{iter::Peekable, num::ParseIntError, str::FromStr};
 
 use anyhow::{anyhow, Error, Result};
+use itertools::Itertools;
 use nom::{
     branch::alt,
     bytes::complete::tag,
@@ -27,9 +28,9 @@ enum Packet {
 
 #[derive(Debug, PartialEq)]
 enum ParsePacketError {
-    ExpectedListStart(Option<char>, usize),
-    ExpectedListDelimiterOrEnd(Option<char>, usize),
-    ExpectedIntStart(Option<char>, usize),
+    ExpectedListStart(Option<char>),
+    ExpectedListDelimiterOrEnd(Option<char>),
+    ExpectedIntStart(Option<char>),
     ParseIntError(ParseIntError),
 }
 
@@ -48,53 +49,43 @@ fn parse_packet_list(packet_str: &str) -> IResult<&str, Packet> {
     )(packet_str)
 }
 
-fn packet_list_from_chars(input: &str, index: &mut usize) -> Result<Packet, ParsePacketError> {
+fn packet_list_from_chars(
+    input_iter: &mut Peekable<impl Iterator<Item = char>>,
+) -> Result<Packet, ParsePacketError> {
     let mut packets = vec![];
-    match input.chars().nth(*index) {
-        Some('[') => {
-            *index += 1;
-        }
-        e => return Err(ParsePacketError::ExpectedListStart(e, *index)),
+    match input_iter.next() {
+        Some('[') => {}
+        e => return Err(ParsePacketError::ExpectedListStart(e)),
     };
-    if let Some(']') = input.chars().nth(*index) {
-        *index += 1;
+    if let Some(']') = input_iter.peek() {
+        input_iter.next();
         return Ok(Packet::List(packets));
     }
     loop {
-        let p = packet_from_str(input, index)?;
+        let p = packet_from_str(input_iter)?;
         packets.push(p);
-        match input.chars().nth(*index) {
-            Some(']') => {
-                *index += 1;
-                break;
-            }
-            Some(',') => {
-                *index += 1;
-            }
-            e => return Err(ParsePacketError::ExpectedListDelimiterOrEnd(e, *index)),
+        match input_iter.next() {
+            Some(']') => break,
+            Some(',') => continue,
+            e => return Err(ParsePacketError::ExpectedListDelimiterOrEnd(e)),
         }
     }
 
     Ok(Packet::List(packets))
 }
 
-fn packet_int_from_str(input: &str, index: &mut usize) -> Result<Packet, ParsePacketError> {
+fn packet_int_from_str(
+    input_iter: &mut Peekable<impl Iterator<Item = char>>,
+) -> Result<Packet, ParsePacketError> {
     let mut current_int_str = "".to_owned();
-    let mut chars = input.chars().skip(*index);
-    match chars.next() {
+    match input_iter.next() {
         Some(c) => {
             current_int_str.push(c);
-            *index += 1;
         }
-        e => return Err(ParsePacketError::ExpectedIntStart(e, *index)),
+        e => return Err(ParsePacketError::ExpectedIntStart(e)),
     };
-    for c in chars {
-        if c.is_ascii_digit() {
-            *index += 1;
-            current_int_str.push(c);
-        } else {
-            break;
-        }
+    for c in input_iter.peeking_take_while(|c| c.is_ascii_digit()) {
+        current_int_str.push(c);
     }
     match current_int_str.parse() {
         Ok(value) => Ok(Packet::Int(value)),
@@ -102,25 +93,27 @@ fn packet_int_from_str(input: &str, index: &mut usize) -> Result<Packet, ParsePa
     }
 }
 
-fn packet_from_str(input: &str, index: &mut usize) -> Result<Packet, ParsePacketError> {
-    let first_char = input.chars().nth(*index).unwrap();
+fn packet_from_str(
+    input_iter: &mut Peekable<impl Iterator<Item = char>>,
+) -> Result<Packet, ParsePacketError> {
+    let first_char = input_iter.peek().unwrap();
     if first_char.is_ascii_digit() {
-        packet_int_from_str(input, index)
-    } else if first_char == '[' {
-        packet_list_from_chars(input, index)
+        packet_int_from_str(input_iter)
+    } else if *first_char == '[' {
+        packet_list_from_chars(input_iter)
     } else {
-        unreachable!()
+        unreachable!("Unexpected first_char `{}`", first_char);
     }
 }
 
 #[test]
 fn test_packet_list() {
     assert_eq!(
-        packet_from_str("[1,2,10]", &mut 0).unwrap(),
+        packet_from_str(&mut "[1,2,10]".chars().peekable()).unwrap(),
         Packet::List(vec![Packet::Int(1), Packet::Int(2), Packet::Int(10)])
     );
     assert_eq!(
-        packet_from_str("[1,2,[18,42],10]", &mut 0).unwrap(),
+        packet_from_str(&mut "[1,2,[18,42],10]".chars().peekable()).unwrap(),
         Packet::List(vec![
             Packet::Int(1),
             Packet::Int(2),
@@ -128,9 +121,12 @@ fn test_packet_list() {
             Packet::Int(10)
         ])
     );
-    assert_eq!(packet_from_str("[]", &mut 0).unwrap(), Packet::List(vec![]));
     assert_eq!(
-        packet_from_str("[[[]]]", &mut 0).unwrap(),
+        packet_from_str(&mut "[]".chars().peekable()).unwrap(),
+        Packet::List(vec![])
+    );
+    assert_eq!(
+        packet_from_str(&mut "[[[]]]".chars().peekable()).unwrap(),
         Packet::List(vec![Packet::List(vec![Packet::List(vec![]),]),])
     );
 }
