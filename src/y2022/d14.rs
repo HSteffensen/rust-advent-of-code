@@ -69,7 +69,7 @@ impl RockGrid {
         if self.grid.is_empty() && !path.is_empty() {
             self.left_boundary = path[0].0;
             self.right_boundary = path[0].0;
-            self.top_boundary = path[0].1;
+            self.top_boundary = 0;
             self.bottom_boundary = path[0].1;
         }
         for (p1, p2) in path.iter().tuple_windows() {
@@ -162,6 +162,29 @@ impl RockGrid {
             }
         }
     }
+
+    // returns true if a solid block is in pos (x,y) when returning
+    fn drop_sands_recursive(&mut self, p: Point2d) -> bool {
+        let Point2d(x, y) = p;
+        if y > self.bottom_boundary {
+            return false;
+        } else if self.grid.contains_key(&p) {
+            return true;
+        }
+        if self.drop_sands_recursive(Point2d(x, y + 1))
+            && self.drop_sands_recursive(Point2d(x - 1, y + 1))
+            && self.drop_sands_recursive(Point2d(x + 1, y + 1))
+        {
+            self.grid.insert(p, Block::Sand);
+            true
+        } else {
+            false
+        }
+    }
+
+    fn drop_sands(&mut self) {
+        self.drop_sands_recursive(Point2d(self.sand_source_column, 0));
+    }
 }
 
 #[test]
@@ -180,29 +203,7 @@ fn test_add_rock_path() {
     ]);
     println!("{:?}", grid);
     println!("{}\n", grid);
-    grid.add_sand_particle();
-    println!("{}\n", grid);
-    assert!(grid.fall_sand());
-    println!("{}\n", grid);
-    assert!(grid.fall_sand());
-    println!("{}\n", grid);
-    assert!(grid.fall_sand());
-    println!("{}\n", grid);
-    assert!(grid.fall_sand());
-    println!("{}\n", grid);
-    assert!(!grid.fall_sand());
-    println!("{}\n", grid);
-    assert!(!grid.fall_sand());
-    println!("{}\n", grid);
-    assert!(grid.drop_one_new_sand());
-    println!("{}\n", grid);
-    assert!(grid.drop_one_new_sand());
-    println!("{}\n", grid);
-    assert!(grid.drop_one_new_sand());
-    assert!(grid.drop_one_new_sand());
-    assert!(grid.drop_one_new_sand());
-    println!("{}\n", grid);
-    grid.drop_many_new_sands();
+    grid.drop_sands();
     println!("{}\n", grid);
 }
 
@@ -241,24 +242,9 @@ impl AocSolution for Part1 {
 
     fn implementation(input: &str) -> String {
         let mut rock_grid = parse_input(input);
-        rock_grid.drop_many_new_sands();
+        rock_grid.drop_sands();
         rock_grid.count_sand().to_string()
     }
-}
-
-fn parse_input_p2(input: &str) -> RockGrid {
-    let mut rock_grid = parse_input(input);
-    rock_grid.add_rock_path(vec![
-        Point2d(
-            rock_grid.left_boundary - rock_grid.bottom_boundary - 2,
-            rock_grid.bottom_boundary + 2,
-        ),
-        Point2d(
-            rock_grid.right_boundary + rock_grid.bottom_boundary + 2,
-            rock_grid.bottom_boundary + 2,
-        ),
-    ]);
-    rock_grid
 }
 
 impl AocSolution for Part2 {
@@ -267,8 +253,18 @@ impl AocSolution for Part2 {
     const PART: u32 = 2;
 
     fn implementation(input: &str) -> String {
-        let mut rock_grid = parse_input_p2(input);
-        rock_grid.drop_many_new_sands_p2();
+        let mut rock_grid = parse_input(input);
+        rock_grid.add_rock_path(vec![
+            Point2d(
+                rock_grid.left_boundary - rock_grid.bottom_boundary - 2,
+                rock_grid.bottom_boundary + 2,
+            ),
+            Point2d(
+                rock_grid.right_boundary + rock_grid.bottom_boundary + 2,
+                rock_grid.bottom_boundary + 2,
+            ),
+        ]);
+        rock_grid.drop_sands();
         rock_grid.count_sand().to_string()
     }
 }
