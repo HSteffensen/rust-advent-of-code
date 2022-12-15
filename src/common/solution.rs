@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 use super::data::{get_examples, get_input, submit_answer};
 
 pub trait AocSolution {
@@ -10,9 +12,11 @@ pub trait AocSolution {
     fn solve() {
         let examples = Self::get_examples();
         for (i, (example, expected)) in examples.iter().enumerate() {
+            let start = Instant::now();
             let actual = Self::implementation(example);
+            let elapsed = start.elapsed();
             if &actual == expected {
-                println!("{}: Example {} passed.", Self::ydp(), i);
+                println!("{}: Example {} passed in {:?}", Self::ydp(), i, elapsed);
             } else {
                 panic!(
                     "\n{}: Example {} failed.\nExample input:\n{}\nExpected: `{}`\nGot: `{}`\n",
@@ -25,7 +29,10 @@ pub trait AocSolution {
             }
         }
         let input = get_input(Self::YEAR, Self::DAY).unwrap();
+        let start = Instant::now();
         let answer = Self::implementation(&input);
+        let elapsed = start.elapsed();
+        println!("Solution ran in {:?}", elapsed);
         if Self::do_post_answer() {
             submit_answer(Self::YEAR, Self::DAY, Self::PART, &answer).unwrap();
         } else {
