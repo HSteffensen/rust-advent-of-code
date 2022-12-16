@@ -14,5 +14,6 @@ mod d12;
 mod d13;
 mod d14;
 mod d15;
+mod d16;
 
 const Y: u32 = 2022;
