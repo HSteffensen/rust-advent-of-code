@@ -87,80 +87,8 @@ impl RockGrid {
         }
     }
 
-    fn add_sand_particle(&mut self) {
-        while self
-            .grid
-            .get(&Point2d(self.sand_source_column, self.top_boundary))
-            .is_some()
-        {
-            self.top_boundary -= 1;
-        }
-        self.grid.insert(
-            Point2d(self.sand_source_column, self.top_boundary),
-            Block::Sand,
-        );
-    }
-
-    fn fall_sand(&mut self) -> bool {
-        let mut settled = true;
-        let sand_positions = self
-            .grid
-            .iter()
-            .filter(|(_, v)| **v == Block::Sand)
-            .map(|(p, _)| *p)
-            .collect_vec();
-        for Point2d(x, y) in sand_positions {
-            if y > self.bottom_boundary {
-                self.grid.remove(&Point2d(x, y));
-            } else if self.grid.get(&Point2d(x, y + 1)).is_none() {
-                settled = false;
-                self.grid.remove(&Point2d(x, y));
-                self.grid.insert(Point2d(x, y + 1), Block::Sand);
-            } else if self.grid.get(&Point2d(x - 1, y + 1)).is_none() {
-                settled = false;
-                self.grid.remove(&Point2d(x, y));
-                self.grid.insert(Point2d(x - 1, y + 1), Block::Sand);
-            } else if self.grid.get(&Point2d(x + 1, y + 1)).is_none() {
-                settled = false;
-                self.grid.remove(&Point2d(x, y));
-                self.grid.insert(Point2d(x + 1, y + 1), Block::Sand);
-            }
-        }
-        !settled
-    }
-
     fn count_sand(&self) -> usize {
         self.grid.iter().filter(|(_, v)| **v == Block::Sand).count()
-    }
-
-    fn drop_one_new_sand(&mut self) -> bool {
-        let prev_sand_count = self.count_sand();
-        self.add_sand_particle();
-        while self.fall_sand() {}
-        self.count_sand() != prev_sand_count
-    }
-
-    fn drop_many_new_sands(&mut self) {
-        while self.drop_one_new_sand() {}
-    }
-
-    fn drop_many_new_sands_p2(&mut self) {
-        self.grid.insert(Point2d(500, 0), Block::Sand);
-        for y in 1..self.bottom_boundary {
-            for x in self.left_boundary..self.right_boundary {
-                let pos = Point2d(x, y);
-                if let Some(Block::Rock) = self.grid.get(&pos) {
-                    continue;
-                }
-                if let Some(Block::Sand) = self.grid.get(&Point2d(x, y - 1)) {
-                    self.grid.insert(pos, Block::Sand);
-                } else if let Some(Block::Sand) = self.grid.get(&Point2d(x - 1, y - 1)) {
-                    self.grid.insert(pos, Block::Sand);
-                } else if let Some(Block::Sand) = self.grid.get(&Point2d(x + 1, y - 1)) {
-                    self.grid.insert(pos, Block::Sand);
-                }
-            }
-        }
     }
 
     // returns true if a solid block is in pos (x,y) when returning
