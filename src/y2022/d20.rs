@@ -1,4 +1,4 @@
-use std::{collections::LinkedList, fmt::Display};
+use std::fmt::Display;
 
 use itertools::Itertools;
 
@@ -12,7 +12,7 @@ const D: u32 = 20;
 
 #[derive(Debug)]
 struct CircleListNode {
-    value: i32,
+    value: i64,
     next: usize,
     prev: usize,
 }
@@ -29,8 +29,8 @@ impl Display for CircleList {
     }
 }
 
-impl From<Vec<i32>> for CircleList {
-    fn from(list: Vec<i32>) -> Self {
+impl From<Vec<i64>> for CircleList {
+    fn from(list: Vec<i64>) -> Self {
         let size = list.len();
         CircleList {
             array: list
@@ -49,14 +49,14 @@ impl From<Vec<i32>> for CircleList {
 
 impl CircleList {
     fn mix(&mut self) {
-        let start_index = self.current_index;
         let size = self.array.len();
         for i in 0..size {
-            self.mix_step((start_index + i) % size);
+            self.mix_step(i);
         }
     }
 
     fn mix_step(&mut self, mixing_index: usize) {
+        let size = self.array.len() as i64;
         let next_index = self.array[mixing_index].next;
         let prev_index = self.array[mixing_index].prev;
 
@@ -65,7 +65,7 @@ impl CircleList {
         self.array[prev_index].next = next_index;
 
         let mut move_index = next_index;
-        let mut moves = self.array[mixing_index].value;
+        let mut moves = self.array[mixing_index].value % (size - 1);
         while moves != 0 {
             if moves > 0 {
                 move_index = self.array[move_index].next;
@@ -89,7 +89,7 @@ impl CircleList {
         }
     }
 
-    fn to_vec(&self) -> Vec<i32> {
+    fn to_vec(&self) -> Vec<i64> {
         let size = self.array.len();
         let mut result = vec![];
         let mut item = &self.array[self.current_index];
@@ -103,7 +103,33 @@ impl CircleList {
 
 #[test]
 fn test_mix() {
-    let mut arr = CircleList::from(vec![1, 2, -3, 3, -2, 0, 4]);
+    let mut arr = CircleList::from(vec![
+        811589153,
+        1623178306,
+        -2434767459,
+        2434767459,
+        -1623178306,
+        0,
+        3246356612,
+    ]);
+    println!("{}", arr);
+    arr.mix();
+    println!("{}", arr);
+    arr.mix();
+    println!("{}", arr);
+    arr.mix();
+    println!("{}", arr);
+    arr.mix();
+    println!("{}", arr);
+    arr.mix();
+    println!("{}", arr);
+    arr.mix();
+    println!("{}", arr);
+    arr.mix();
+    println!("{}", arr);
+    arr.mix();
+    println!("{}", arr);
+    arr.mix();
     println!("{}", arr);
     arr.mix();
     println!("{}", arr);
@@ -117,7 +143,7 @@ impl AocSolution for Part1 {
     fn implementation(input: &str) -> String {
         let input_list = input
             .lines()
-            .map(|l| str::parse::<i32>(l).unwrap())
+            .map(|l| str::parse::<i64>(l).unwrap())
             .collect_vec();
         let mut list = CircleList::from(input_list);
         list.mix();
@@ -141,7 +167,26 @@ impl AocSolution for Part2 {
     const PART: u32 = 2;
 
     fn implementation(input: &str) -> String {
-        todo!()
+        let decryption_key = 811589153;
+        let input_list = input
+            .lines()
+            .map(|l| str::parse::<i64>(l).unwrap() * decryption_key)
+            .collect_vec();
+        let mut list = CircleList::from(input_list);
+        for _ in 0..10 {
+            list.mix();
+        }
+        let result = list.to_vec();
+        let zero_index = result
+            .iter()
+            .enumerate()
+            .find_map(|(i, v)| if v == &0 { Some(i) } else { None })
+            .unwrap();
+        let size = result.len();
+        (result[(zero_index + 1000) % size]
+            + result[(zero_index + 2000) % size]
+            + result[(zero_index + 3000) % size])
+            .to_string()
     }
 }
 
