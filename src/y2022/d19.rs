@@ -121,19 +121,36 @@ impl<'a> Display for BotBuildState<'a> {
 }
 
 impl<'a> BotBuildState<'a> {
-    fn max_possible_geodes(&self) -> i32 {
-        if self.time_step == 23 {
+    fn max_possible_geodes_in(&self, minutes: i32) -> i32 {
+        self.max_possible_geodes_helper(minutes, 0)
+    }
+
+    fn max_possible_geodes_helper(&self, minutes: i32, mut max_so_far: i32) -> i32 {
+        let time_left = minutes - self.time_step;
+        let theoretical_geode_production = (time_left * time_left - 1) / 2;
+        let current_geode_production = self.geodes + self.geode_bots * (minutes - self.time_step);
+        let theoretical_max = current_geode_production + theoretical_geode_production;
+        if self.time_step == minutes - 1 {
             self.geodes + self.geode_bots
+        } else if theoretical_max <= max_so_far {
+            // if we managed to build a geode bot every minute until we finish,
+            // we still wouldn't beat max_so_far, so give up
+            theoretical_max
         } else {
-            self.possible_next_steps()
-                .iter()
-                .map(|s| s.max_possible_geodes())
-                .max()
-                .unwrap_or(self.geodes + self.geode_bots * (24 - self.time_step))
+            let next_steps = self.possible_next_steps(minutes);
+            if next_steps.is_empty() {
+                return current_geode_production;
+            }
+            for step in next_steps {
+                max_so_far = step
+                    .max_possible_geodes_helper(minutes, max_so_far)
+                    .max(max_so_far);
+            }
+            max_so_far
         }
     }
 
-    fn possible_next_steps(&self) -> Vec<BotBuildState> {
+    fn possible_next_steps(&self, max_minutes: i32) -> Vec<BotBuildState> {
         let mut result = vec![];
 
         // build geode bot
@@ -148,7 +165,7 @@ impl<'a> BotBuildState<'a> {
                 .ceil() as i32
                 + 1;
             // no benefit in building geode on time_step=24, so we only care until 23
-            if self.time_step + time_to_build <= 23 {
+            if self.time_step + time_to_build <= max_minutes - 1 {
                 result.push(BotBuildState {
                     costs: self.costs,
                     time_step: self.time_step + time_to_build,
@@ -174,7 +191,7 @@ impl<'a> BotBuildState<'a> {
                 .ceil() as i32
                 + 1;
             // no benefit in building obs on time_step=23, so we only care until 22
-            if self.time_step + time_to_build <= 22 {
+            if self.time_step + time_to_build <= max_minutes - 2 {
                 result.push(BotBuildState {
                     costs: self.costs,
                     time_step: self.time_step + time_to_build,
@@ -197,7 +214,7 @@ impl<'a> BotBuildState<'a> {
             .ceil() as i32
             + 1;
         // no benefit in building clay on time_step=22, so we only care until 21
-        if self.time_step + time_to_build <= 21 {
+        if self.time_step + time_to_build <= max_minutes - 3 {
             result.push(BotBuildState {
                 costs: self.costs,
                 time_step: self.time_step + time_to_build,
@@ -218,7 +235,7 @@ impl<'a> BotBuildState<'a> {
             .ceil() as i32
             + 1;
         // no benefit in building ore on time_step=21, so we only care until 20
-        if self.time_step + time_to_build <= 20 {
+        if self.time_step + time_to_build <= max_minutes - 4 {
             result.push(BotBuildState {
                 costs: self.costs,
                 time_step: self.time_step + time_to_build,
@@ -259,7 +276,7 @@ impl AocSolution for Part1 {
                     geodes: 0,
                     geode_bots: 0,
                 }
-                .max_possible_geodes();
+                .max_possible_geodes_in(24);
                 println!("Blueprint {}: {} geodes, {} score", c.id, m, m * c.id);
                 m * c.id
             })
@@ -274,7 +291,29 @@ impl AocSolution for Part2 {
     const PART: u32 = 2;
 
     fn implementation(input: &str) -> String {
-        todo!()
+        let (_, costs) = parse_input(input).unwrap();
+        costs
+            .iter()
+            .take(3)
+            .map(|c| {
+                let m = BotBuildState {
+                    costs: c,
+                    time_step: 0,
+                    ores: 0,
+                    ore_bots: 1,
+                    clays: 0,
+                    clay_bots: 0,
+                    obsidians: 0,
+                    obsidian_bots: 0,
+                    geodes: 0,
+                    geode_bots: 0,
+                }
+                .max_possible_geodes_in(32);
+                println!("Blueprint {}: {} geodes", c.id, m);
+                m
+            })
+            .product::<i32>()
+            .to_string()
     }
 }
 
@@ -321,7 +360,7 @@ fn test_next_steps() {
         geodes: 4,
         geode_bots: 2,
     };
-    let actual = bot_state.possible_next_steps();
+    let actual = bot_state.possible_next_steps(24);
     let expected = vec![
         BotBuildState {
             // built geode
