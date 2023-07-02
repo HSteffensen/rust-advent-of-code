@@ -183,7 +183,7 @@ impl<'a> BotBuildState<'a> {
         }
 
         // build obsidian bot
-        if self.clay_bots > 0 {
+        if self.obsidian_bots < self.costs.geode_bot_obsidian && self.clay_bots > 0 {
             let time_to_build = ((self.costs.obsidian_bot_ore - self.ores) as f64
                 / self.ore_bots as f64)
                 .max((self.costs.obsidian_bot_clay - self.clays) as f64 / self.clay_bots as f64)
@@ -209,45 +209,56 @@ impl<'a> BotBuildState<'a> {
         }
 
         // build clay bot
-        let time_to_build = ((self.costs.clay_bot_ore - self.ores) as f64 / self.ore_bots as f64)
-            .max(0.0)
-            .ceil() as i32
-            + 1;
-        // no benefit in building clay on time_step=22, so we only care until 21
-        if self.time_step + time_to_build <= max_minutes - 3 {
-            result.push(BotBuildState {
-                costs: self.costs,
-                time_step: self.time_step + time_to_build,
-                ores: self.ores + self.ore_bots * time_to_build - self.costs.clay_bot_ore,
-                ore_bots: self.ore_bots,
-                clays: self.clays + self.clay_bots * time_to_build,
-                clay_bots: self.clay_bots + 1,
-                obsidians: self.obsidians + self.obsidian_bots * time_to_build,
-                obsidian_bots: self.obsidian_bots,
-                geodes: self.geodes + self.geode_bots * time_to_build,
-                geode_bots: self.geode_bots,
-            })
+        if self.clay_bots < self.costs.obsidian_bot_clay {
+            let time_to_build = ((self.costs.clay_bot_ore - self.ores) as f64
+                / self.ore_bots as f64)
+                .max(0.0)
+                .ceil() as i32
+                + 1;
+            // no benefit in building clay on time_step=22, so we only care until 21
+            if self.time_step + time_to_build <= max_minutes - 3 {
+                result.push(BotBuildState {
+                    costs: self.costs,
+                    time_step: self.time_step + time_to_build,
+                    ores: self.ores + self.ore_bots * time_to_build - self.costs.clay_bot_ore,
+                    ore_bots: self.ore_bots,
+                    clays: self.clays + self.clay_bots * time_to_build,
+                    clay_bots: self.clay_bots + 1,
+                    obsidians: self.obsidians + self.obsidian_bots * time_to_build,
+                    obsidian_bots: self.obsidian_bots,
+                    geodes: self.geodes + self.geode_bots * time_to_build,
+                    geode_bots: self.geode_bots,
+                })
+            }
         }
 
         // build ore bot
-        let time_to_build = ((self.costs.ore_bot_ore - self.ores) as f64 / self.ore_bots as f64)
-            .max(0.0)
-            .ceil() as i32
-            + 1;
-        // no benefit in building ore on time_step=21, so we only care until 20
-        if self.time_step + time_to_build <= max_minutes - 4 {
-            result.push(BotBuildState {
-                costs: self.costs,
-                time_step: self.time_step + time_to_build,
-                ores: self.ores + self.ore_bots * time_to_build - self.costs.ore_bot_ore,
-                ore_bots: self.ore_bots + 1,
-                clays: self.clays + self.clay_bots * time_to_build,
-                clay_bots: self.clay_bots,
-                obsidians: self.obsidians + self.obsidian_bots * time_to_build,
-                obsidian_bots: self.obsidian_bots,
-                geodes: self.geodes + self.geode_bots * time_to_build,
-                geode_bots: self.geode_bots,
-            })
+        if self.ore_bots // only build if any recipe could go faster
+            < self
+                .costs
+                .clay_bot_ore
+                .max(self.costs.obsidian_bot_ore)
+                .max(self.costs.geode_bot_ore)
+        {
+            let time_to_build = ((self.costs.ore_bot_ore - self.ores) as f64 / self.ore_bots as f64)
+                .max(0.0)
+                .ceil() as i32
+                + 1;
+            // no benefit in building ore on time_step=21, so we only care until 20
+            if self.time_step + time_to_build <= max_minutes - 4 {
+                result.push(BotBuildState {
+                    costs: self.costs,
+                    time_step: self.time_step + time_to_build,
+                    ores: self.ores + self.ore_bots * time_to_build - self.costs.ore_bot_ore,
+                    ore_bots: self.ore_bots + 1,
+                    clays: self.clays + self.clay_bots * time_to_build,
+                    clay_bots: self.clay_bots,
+                    obsidians: self.obsidians + self.obsidian_bots * time_to_build,
+                    obsidian_bots: self.obsidian_bots,
+                    geodes: self.geodes + self.geode_bots * time_to_build,
+                    geode_bots: self.geode_bots,
+                })
+            }
         }
 
         result
