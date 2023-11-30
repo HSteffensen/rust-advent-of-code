@@ -77,10 +77,11 @@ fn parse_line(line: &str) -> IResult<&str, (&str, MonkeyYell)> {
 
 fn evaluate_monkey<'a, 'b>(
     monkey_name: &'a str,
-    all_monkeys: &'b mut HashMap<&'a str, MonkeyYell<'a>>,
+    all_monkeys: &'b HashMap<&'a str, MonkeyYell<'a>>,
 ) -> i64 {
     let monkey_yell = all_monkeys.get(monkey_name).unwrap().clone();
-    let value = match monkey_yell {
+
+    match monkey_yell {
         MonkeyYell::Function(f, a, b) => {
             let a_value = evaluate_monkey(a, all_monkeys);
             let b_value = evaluate_monkey(b, all_monkeys);
@@ -90,12 +91,10 @@ fn evaluate_monkey<'a, 'b>(
                 MonkeyMathFunction::Times => a_value * b_value,
                 MonkeyMathFunction::DividedBy => a_value / b_value,
             };
-            all_monkeys.insert(monkey_name, MonkeyYell::Value(v));
             v
         }
         MonkeyYell::Value(v) => v,
-    };
-    value
+    }
 }
 
 #[test]
@@ -122,8 +121,8 @@ impl AocSolution for Part1 {
     const PART: u32 = 1;
 
     fn implementation(input: &str) -> String {
-        let mut yells = parse_input(input);
-        evaluate_monkey("root", &mut yells).to_string()
+        let yells = parse_input(input);
+        evaluate_monkey("root", &yells).to_string()
     }
 }
 
@@ -133,7 +132,57 @@ impl AocSolution for Part2 {
     const PART: u32 = 2;
 
     fn implementation(input: &str) -> String {
-        todo!()
+        let mut yells = parse_input(input);
+        yells.insert("humn", MonkeyYell::Value(1));
+        if let MonkeyYell::Function(_, left, right) = yells["root"] {
+            let lv = evaluate_monkey(left, &yells);
+            let rv = evaluate_monkey(right, &yells);
+
+            yells.insert("humn", MonkeyYell::Value(1000));
+            let lv2 = evaluate_monkey(left, &yells);
+
+            let (constant, monkey) = if lv == lv2 { (lv, right) } else { (rv, left) };
+            let (mut lower, mut upper) = (1, 2 << 20);
+            yells.insert("humn", MonkeyYell::Value(lower));
+            let lower_result = evaluate_monkey(monkey, &yells);
+            yells.insert("humn", MonkeyYell::Value(upper));
+            let upper_result = evaluate_monkey(monkey, &yells);
+            let sign = (upper_result - lower_result).signum();
+
+            println!(
+                "target = {}\nstart = {}:{}, {}:{}",
+                constant, lower, lower_result, upper, upper_result
+            );
+
+            let mut i = 0;
+            while lower < upper {
+                if i >= 10 {
+                    todo!()
+                }
+                i += 1;
+                let middle = upper + lower / 2;
+                yells.insert("humn", MonkeyYell::Value(middle));
+                let middle_result = evaluate_monkey(monkey, &yells);
+                println!("{}, {}:{}, {}", lower, middle, middle_result, upper);
+                println!(
+                    "{}-{} * {} = {}",
+                    middle_result,
+                    constant,
+                    sign,
+                    (middle_result - constant) * sign
+                );
+                if middle_result == constant {
+                    return middle.to_string();
+                } else if (middle_result - constant) * sign > 0 {
+                    upper = middle;
+                } else {
+                    lower = middle;
+                }
+            }
+            lower.to_string()
+        } else {
+            panic!()
+        }
     }
 }
 
