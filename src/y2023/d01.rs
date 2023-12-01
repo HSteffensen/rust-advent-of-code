@@ -124,3 +124,71 @@ fn p2_pull_examples() {
 fn p2_run() {
     Part2::solve();
 }
+
+struct Part1Simpler {}
+struct Part2Simpler {}
+
+fn find_digits(input: &str) -> u32 {
+    let first = input
+        .chars()
+        .find(|c| c.is_numeric())
+        .unwrap()
+        .to_digit(10)
+        .unwrap();
+    let last = input
+        .chars()
+        .rfind(|c| c.is_numeric())
+        .unwrap()
+        .to_digit(10)
+        .unwrap();
+    (first * 10) + last
+}
+
+impl AocSolution for Part1Simpler {
+    const YEAR: u32 = Y;
+    const DAY: u32 = D;
+    const PART: u32 = 1;
+
+    fn implementation(input: &str) -> String {
+        input.lines().map(find_digits).sum::<u32>().to_string()
+    }
+}
+
+fn replace_number_words(input: &str) -> String {
+    input
+        .replace("one", "one1one")
+        .replace("two", "two2two")
+        .replace("three", "three3three")
+        .replace("four", "four4four")
+        .replace("five", "five5five")
+        .replace("six", "six6six")
+        .replace("seven", "seven7seven")
+        .replace("eight", "eight8eight")
+        .replace("nine", "nine9nine")
+        .replace("zero", "zero0zero")
+}
+
+impl AocSolution for Part2Simpler {
+    const YEAR: u32 = Y;
+    const DAY: u32 = D;
+    const PART: u32 = 2;
+
+    fn implementation(input: &str) -> String {
+        input
+            .lines()
+            .map(replace_number_words)
+            .map(|s| find_digits(s.as_str()))
+            .sum::<u32>()
+            .to_string()
+    }
+}
+
+#[test]
+fn p1_simpler_run() {
+    Part1Simpler::solve();
+}
+
+#[test]
+fn p2_simpler_run() {
+    Part1Simpler::solve();
+}
