@@ -8,10 +8,15 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.66"
 chrono = "0.4.23"
-itertools = "0.10.5"
+itertools = "0.12.0"
 kuchiki = "0.8.1"
 nom = "7.1.1"
 regex = "1.7.0"
 serde = "1.0.147"
 serde_json = "1.0.88"
-ureq = { version = "2.5.0", features = ["json", "serde", "serde_json", "cookies"] }
+ureq = { version = "2.5.0", features = [
+    "json",
+    "serde",
+    "serde_json",
+    "cookies",
+] }
