@@ -12,7 +12,7 @@ impl AocSolution for Part1 {
     const PART: u32 = 1;
 
     fn implementation(input: &str) -> String {
-        todo!()
+        todo!("{}", input)
     }
 }
 
@@ -22,7 +22,7 @@ impl AocSolution for Part2 {
     const PART: u32 = 2;
 
     fn implementation(input: &str) -> String {
-        todo!()
+        todo!("{}", input)
     }
 }
 

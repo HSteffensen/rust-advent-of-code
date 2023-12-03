@@ -1,10 +1,8 @@
-use std::{
-    collections::HashSet,
-    fmt::{self, Display},
-};
+use std::fmt::{self, Display};
 
 use crate::common::solution::AocSolution;
 
+#[cfg(test)] // Itertools trait only used in test scope, so import needs test scope
 use itertools::Itertools;
 use nom::{
     bytes::complete::tag,
