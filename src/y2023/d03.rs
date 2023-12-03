@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use nom::{
     branch::alt,
     bytes::complete::take,
@@ -58,19 +59,44 @@ impl EngineSchematic {
         } else {
             (None, None)
         };
-        vec![
-            top_left,
-            top,
-            top_right,
-            left,
-            self.get(x + 1, y),
+        let top_row = vec![Some(&SchematicPart::Empty), top_left, top, top_right]
+            .into_iter()
+            .flatten()
+            .tuple_windows::<(&SchematicPart, &SchematicPart)>()
+            .map(|(a, b)| {
+                if let SchematicPart::Number(_) = a {
+                    if a == b {
+                        &SchematicPart::Empty
+                    } else {
+                        b
+                    }
+                } else {
+                    b
+                }
+            });
+        let bottom_row = vec![
+            Some(&SchematicPart::Empty),
             bottom_left,
             self.get(x, y + 1),
             self.get(x + 1, y + 1),
         ]
         .into_iter()
         .flatten()
-        .collect()
+        .tuple_windows::<(&SchematicPart, &SchematicPart)>()
+        .map(|(a, b)| {
+            if let SchematicPart::Number(_) = a {
+                if a == b {
+                    &SchematicPart::Empty
+                } else {
+                    b
+                }
+            } else {
+                b
+            }
+        });
+        let right = self.get(x + 1, y);
+        let middle_row = vec![left, right].into_iter().flatten();
+        top_row.chain(middle_row).chain(bottom_row).collect_vec()
     }
 
     fn get_part_numbers(&self) -> Vec<u32> {
@@ -99,6 +125,28 @@ impl EngineSchematic {
         }
         result
     }
+
+    fn get_gear_ratios(&self) -> Vec<Vec<u32>> {
+        self.data
+            .iter()
+            .enumerate()
+            .filter_map(|(i, v)| match v {
+                SchematicPart::Symbol(_) => {
+                    let (x, y) = self.get_pos(i);
+                    Some(
+                        self.get_neighbors(x, y)
+                            .into_iter()
+                            .filter_map(|neighbor| match neighbor {
+                                SchematicPart::Number(x) => Some(x.clone()),
+                                _ => None,
+                            })
+                            .collect_vec(),
+                    )
+                }
+                _ => None,
+            })
+            .collect_vec()
+    }
 }
 
 #[test]
@@ -112,9 +160,9 @@ fn test_get_part_numbers() {
             SchematicPart::Empty,
             SchematicPart::Empty,
             // row 2
-            SchematicPart::Number(1),
-            SchematicPart::Empty,
-            SchematicPart::Number(2),
+            SchematicPart::Number(123),
+            SchematicPart::Number(123),
+            SchematicPart::Number(123),
             // row 3
             SchematicPart::Number(3),
             SchematicPart::Symbol('#'),
@@ -131,6 +179,7 @@ fn test_get_part_numbers() {
     println!("{:?}", schematic.get_neighbors(1, 2));
     println!("{:?}", schematic.get_neighbors(2, 2));
     println!("{:?}", schematic.get_part_numbers());
+    println!("{:?}", schematic.get_gear_ratios());
 }
 
 fn parse_line(line: &str) -> Vec<SchematicPart> {
@@ -186,7 +235,18 @@ impl AocSolution for Part2 {
     const PART: u32 = 2;
 
     fn implementation(input: &str) -> String {
-        todo!()
+        parse_input(input)
+            .get_gear_ratios()
+            .iter()
+            .map(|vals| {
+                if vals.len() == 2 {
+                    vals[0] * vals[1]
+                } else {
+                    0
+                }
+            })
+            .sum::<u32>()
+            .to_string()
     }
 }
 
