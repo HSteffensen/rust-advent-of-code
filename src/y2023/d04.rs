@@ -81,14 +81,10 @@ impl AocSolution for Part2 {
             let count = card_counts[&card.id];
             let score = (card.winning_numbers.intersection(&card.drawn_numbers)).count();
             for i in card.id..(card.id + score) {
-                card_counts.entry(i+1).and_modify(|v| *v += count);
+                card_counts.entry(i + 1).and_modify(|v| *v += count);
             }
         }
-        card_counts
-            .into_iter()
-            .map(|(_, v)| v)
-            .sum::<usize>()
-            .to_string()
+        card_counts.into_values().sum::<usize>().to_string()
     }
 }
 
