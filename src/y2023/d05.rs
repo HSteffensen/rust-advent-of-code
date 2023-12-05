@@ -50,7 +50,7 @@ struct AlmanacItem {
 }
 
 impl AlmanacItem {
-    fn map_source(&self, mappings: &Vec<AlmanacMapping>) -> AlmanacItem {
+    fn map_source(&self, mappings: &[AlmanacMapping]) -> AlmanacItem {
         let mapped = mappings
             .iter()
             .find_map(|mapping| mapping.map_source(self.id))

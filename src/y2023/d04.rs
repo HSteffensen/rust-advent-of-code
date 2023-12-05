@@ -26,7 +26,7 @@ struct Card {
 
 fn parse_numbers(input: &str) -> IResult<&str, HashSet<u32>> {
     map(separated_list1(multispace1, complete::u32), |numbers| {
-        HashSet::from_iter(numbers.into_iter())
+        HashSet::from_iter(numbers)
     })(input)
 }
 

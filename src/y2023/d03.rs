@@ -37,7 +37,7 @@ impl EngineSchematic {
 
     fn get(&self, x: usize, y: usize) -> Option<&SchematicPart> {
         if (0..self.width).contains(&x) && (0..self.height).contains(&y) {
-            self.data.iter().nth(y * self.width + x)
+            self.data.get(y * self.width + x)
         } else {
             None
         }
@@ -137,7 +137,7 @@ impl EngineSchematic {
                         self.get_neighbors(x, y)
                             .into_iter()
                             .filter_map(|neighbor| match neighbor {
-                                SchematicPart::Number(x) => Some(x.clone()),
+                                SchematicPart::Number(x) => Some(*x),
                                 _ => None,
                             })
                             .collect_vec(),
@@ -191,12 +191,12 @@ fn parse_line(line: &str) -> Vec<SchematicPart> {
             vec![SchematicPart::Number(n); n_str.len()]
         }),
         map(take(1usize), |c: &str| {
-            vec![SchematicPart::Symbol(c.chars().nth(0).unwrap())]
+            vec![SchematicPart::Symbol(c.chars().next().unwrap())]
         }),
     )))(line)
     .unwrap()
     .1;
-    return parsed.into_iter().flatten().collect();
+    parsed.into_iter().flatten().collect()
 }
 
 #[test]
@@ -207,7 +207,7 @@ fn test_parse_line() {
 fn parse_input(input: &str) -> EngineSchematic {
     let width = input.chars().take_while(|c| !c.is_whitespace()).count();
     let height = input.lines().count();
-    let data = input.lines().map(parse_line).flatten().collect();
+    let data = input.lines().flat_map(parse_line).collect();
     EngineSchematic {
         width,
         height,

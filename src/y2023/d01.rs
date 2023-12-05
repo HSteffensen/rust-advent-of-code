@@ -37,7 +37,7 @@ impl AocSolution for Part1 {
             .map(|line| {
                 let first = first_digit(line);
                 let last = first_digit(line.chars().rev().collect::<String>().as_str());
-                vec![first, last]
+                [first, last]
                     .iter()
                     .collect::<String>()
                     .parse::<i32>()
@@ -60,7 +60,7 @@ fn peek_digit_or_word_number(input: &str) -> IResult<&str, Option<i32>> {
         value(Some(7), tag("seven")),
         value(Some(8), tag("eight")),
         value(Some(9), tag("nine")),
-        map_parser(take(1u32), map(complete::i32, |v| Some(v))),
+        map_parser(take(1u32), map(complete::i32, Some)),
         value(None, anychar),
     )))(input)
 }
@@ -99,7 +99,7 @@ impl AocSolution for Part2 {
     fn implementation(input: &str) -> String {
         input
             .lines()
-            .map(|line| parse_digits_or_word_numbers(line))
+            .map(parse_digits_or_word_numbers)
             .sum::<i32>()
             .to_string()
     }

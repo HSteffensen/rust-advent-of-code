@@ -17,7 +17,7 @@ impl AocSolution for Part1 {
 
     fn implementation(input: &str) -> String {
         for (i, (a, b, c, d)) in input.chars().tuple_windows().enumerate() {
-            if HashSet::<&char>::from_iter(vec![a, b, c, d].iter()).len() == 4 {
+            if HashSet::<&char>::from_iter([a, b, c, d].iter()).len() == 4 {
                 return (i + 4).to_string();
             }
         }

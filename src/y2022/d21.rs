@@ -75,9 +75,9 @@ fn parse_line(line: &str) -> IResult<&str, (&str, MonkeyYell)> {
     )(line)
 }
 
-fn evaluate_monkey<'a, 'b>(
+fn evaluate_monkey<'a>(
     monkey_name: &'a str,
-    all_monkeys: &'b HashMap<&'a str, MonkeyYell<'a>>,
+    all_monkeys: &HashMap<&'a str, MonkeyYell<'a>>,
 ) -> i64 {
     let monkey_yell = all_monkeys.get(monkey_name).unwrap().clone();
 
@@ -85,13 +85,13 @@ fn evaluate_monkey<'a, 'b>(
         MonkeyYell::Function(f, a, b) => {
             let a_value = evaluate_monkey(a, all_monkeys);
             let b_value = evaluate_monkey(b, all_monkeys);
-            let v = match f {
+
+            match f {
                 MonkeyMathFunction::Plus => a_value + b_value,
                 MonkeyMathFunction::Minus => a_value - b_value,
                 MonkeyMathFunction::Times => a_value * b_value,
                 MonkeyMathFunction::DividedBy => a_value / b_value,
-            };
-            v
+            }
         }
         MonkeyYell::Value(v) => v,
     }
@@ -106,9 +106,9 @@ fn test_parse() {
 #[test]
 fn test_evaluate() {
     let input = &Part1::get_examples()[0].0;
-    let mut monkeys = parse_input(input);
-    assert_eq!(evaluate_monkey("zczc", &mut monkeys), 2);
-    assert_eq!(evaluate_monkey("drzm", &mut monkeys), 30);
+    let monkeys = parse_input(input);
+    assert_eq!(evaluate_monkey("zczc", &monkeys), 2);
+    assert_eq!(evaluate_monkey("drzm", &monkeys), 30);
     match monkeys["drzm"] {
         MonkeyYell::Function(_, _, _) => panic!("unexpected match arm in test"),
         MonkeyYell::Value(v) => assert_eq!(v, 30),
