@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use nom::{
     bytes::complete::tag,
     character::complete::{self, newline, space1},
@@ -32,6 +33,17 @@ impl AlmanacMapping {
             .filter(|s| self.contains_source(s))
             .map(|s| s + self.destination_start - self.source_start)
     }
+
+    fn contains_destination(&self, destination: &u64) -> bool {
+        let destination_end = self.destination_start + self.length;
+        (self.destination_start..destination_end).contains(destination)
+    }
+
+    fn map_destination_to_source(&self, destination: u64) -> Option<u64> {
+        Some(destination)
+            .filter(|s| self.contains_destination(s))
+            .map(|s| s + self.source_start - self.destination_start)
+    }
 }
 
 struct Almanac {
@@ -46,22 +58,30 @@ struct Almanac {
 }
 
 struct AlmanacItem {
-    id: u64,
+    value: u64,
 }
 
 impl AlmanacItem {
     fn map_source(&self, mappings: &[AlmanacMapping]) -> AlmanacItem {
         let mapped = mappings
             .iter()
-            .find_map(|mapping| mapping.map_source(self.id))
-            .unwrap_or(self.id);
-        AlmanacItem { id: mapped }
+            .find_map(|mapping| mapping.map_source(self.value))
+            .unwrap_or(self.value);
+        AlmanacItem { value: mapped }
+    }
+
+    fn map_destination_to_source(&self, mappings: &[AlmanacMapping]) -> AlmanacItem {
+        let mapped = mappings
+            .iter()
+            .find_map(|mapping| mapping.map_destination_to_source(self.value))
+            .unwrap_or(self.value);
+        AlmanacItem { value: mapped }
     }
 }
 
 impl Almanac {
     fn seed_to_location(&self, seed: u64) -> u64 {
-        AlmanacItem { id: seed }
+        AlmanacItem { value: seed }
             .map_source(&self.seed_to_soil)
             .map_source(&self.soil_to_fertilizer)
             .map_source(&self.fertilizer_to_water)
@@ -69,7 +89,19 @@ impl Almanac {
             .map_source(&self.light_to_temperature)
             .map_source(&self.temperature_to_humidity)
             .map_source(&self.humidity_to_location)
-            .id
+            .value
+    }
+
+    fn location_to_seed(&self, location: u64) -> u64 {
+        AlmanacItem { value: location }
+            .map_destination_to_source(&self.humidity_to_location)
+            .map_destination_to_source(&self.temperature_to_humidity)
+            .map_destination_to_source(&self.light_to_temperature)
+            .map_destination_to_source(&self.water_to_light)
+            .map_destination_to_source(&self.fertilizer_to_water)
+            .map_destination_to_source(&self.soil_to_fertilizer)
+            .map_destination_to_source(&self.seed_to_soil)
+            .value
     }
 }
 
@@ -157,15 +189,17 @@ impl AocSolution for Part2 {
 
     fn implementation(input: &str) -> String {
         let almanac = parse_input(input);
-        almanac
+        let seed_ranges = almanac
             .seeds
-            .chunks_exact(2)
-            .flat_map(|s| {
-                println!("chunk starting at {}", s[0]);
-                s[0]..(s[0] + s[1])
+            .chunks(2)
+            .map(|seed| seed[0]..(seed[0] + seed[1]))
+            .collect_vec();
+        let some_location = almanac.seed_to_location(almanac.seeds[0]);
+        (0..some_location)
+            .find(|loc| {
+                let seed = almanac.location_to_seed(*loc);
+                seed_ranges.iter().any(|r| r.contains(&seed))
             })
-            .map(|seed| almanac.seed_to_location(seed))
-            .min()
             .unwrap()
             .to_string()
     }
