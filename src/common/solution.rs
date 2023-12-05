@@ -32,14 +32,9 @@ pub trait AocSolution {
         let start = Instant::now();
         let answer = Self::implementation(&input);
         let elapsed = start.elapsed();
-        println!("Solution ran in {:?}", elapsed);
+        println!("Answer `{}`; Solution ran in {:?}", answer, elapsed);
         if Self::do_post_answer() {
             submit_answer(Self::YEAR, Self::DAY, Self::PART, &answer).unwrap();
-        } else {
-            println!(
-                "Printing answer rather than posting to the AoC website:\n{}",
-                answer
-            );
         }
     }
 
