@@ -14,11 +14,8 @@ use nom::{
 
 use crate::common::solution::AocSolution;
 
-use super::Y;
-
 struct Part1 {}
 struct Part2 {}
-const D: u32 = 13;
 
 #[derive(Debug, PartialEq, Eq)]
 enum Packet {
@@ -106,9 +103,10 @@ fn parse_input(input: &str) -> Vec<(Packet, Packet)> {
 }
 
 impl AocSolution for Part1 {
-    const YEAR: u32 = Y;
-    const DAY: u32 = D;
     const PART: u32 = 1;
+    fn solution_path() -> String {
+        module_path!().to_string()
+    }
 
     fn implementation(input: &str) -> String {
         let packet_pairs = parse_input(input);
@@ -132,9 +130,10 @@ fn parse_input_p2(input: &str) -> Vec<Packet> {
 }
 
 impl AocSolution for Part2 {
-    const YEAR: u32 = Y;
-    const DAY: u32 = D;
     const PART: u32 = 2;
+    fn solution_path() -> String {
+        module_path!().to_string()
+    }
 
     fn implementation(input: &str) -> String {
         let mut packets = parse_input_p2(input);

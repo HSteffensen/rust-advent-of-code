@@ -8,11 +8,8 @@ use nom::{
 
 use crate::common::solution::AocSolution;
 
-use super::Y;
-
 struct Part1 {}
 struct Part2 {}
-const D: u32 = 14;
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 struct Point2d(i64, i64);
@@ -164,9 +161,10 @@ fn parse_input(input: &str) -> RockGrid {
 }
 
 impl AocSolution for Part1 {
-    const YEAR: u32 = Y;
-    const DAY: u32 = D;
     const PART: u32 = 1;
+    fn solution_path() -> String {
+        module_path!().to_string()
+    }
 
     fn implementation(input: &str) -> String {
         let mut rock_grid = parse_input(input);
@@ -176,9 +174,10 @@ impl AocSolution for Part1 {
 }
 
 impl AocSolution for Part2 {
-    const YEAR: u32 = Y;
-    const DAY: u32 = D;
     const PART: u32 = 2;
+    fn solution_path() -> String {
+        module_path!().to_string()
+    }
 
     fn implementation(input: &str) -> String {
         let mut rock_grid = parse_input(input);

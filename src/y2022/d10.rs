@@ -2,11 +2,8 @@ use itertools::Itertools;
 
 use crate::common::solution::AocSolution;
 
-use super::Y;
-
 struct Part1 {}
 struct Part2 {}
-const D: u32 = 10;
 
 #[derive(Debug)]
 enum Instruction {
@@ -53,9 +50,10 @@ fn parse_input(input: &str) -> Vec<Instruction> {
 }
 
 impl AocSolution for Part1 {
-    const YEAR: u32 = Y;
-    const DAY: u32 = D;
     const PART: u32 = 1;
+    fn solution_path() -> String {
+        module_path!().to_string()
+    }
 
     fn implementation(input: &str) -> String {
         let instructions = parse_input(input);
@@ -82,9 +80,10 @@ fn pixel_is_lit(cycle: i32, cpu: i32) -> bool {
 }
 
 impl AocSolution for Part2 {
-    const YEAR: u32 = Y;
-    const DAY: u32 = D;
     const PART: u32 = 2;
+    fn solution_path() -> String {
+        module_path!().to_string()
+    }
 
     fn do_post_answer() -> bool {
         false

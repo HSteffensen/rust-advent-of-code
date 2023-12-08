@@ -3,9 +3,25 @@ use std::time::Instant;
 use super::data::{get_examples, get_input, submit_answer};
 
 pub trait AocSolution {
-    const YEAR: u32;
-    const DAY: u32;
     const PART: u32;
+
+    fn solution_path() -> String {
+        "".to_string()
+    }
+
+    fn year_day() -> (u32, u32) {
+        let year = Self::solution_path()
+            .split("::")
+            .find(|part| part.starts_with('y'))
+            .map(|part| part.replace('y', "").parse().unwrap())
+            .unwrap();
+        let day = Self::solution_path()
+            .split("::")
+            .find(|part| part.starts_with('d'))
+            .map(|part| part.replace('d', "").parse().unwrap())
+            .unwrap();
+        (year, day)
+    }
 
     fn implementation(input: &str) -> String;
 
@@ -28,13 +44,14 @@ pub trait AocSolution {
                 )
             }
         }
-        let input = get_input(Self::YEAR, Self::DAY).unwrap();
+        let (year, day) = Self::year_day();
+        let input = get_input(year, day).unwrap();
         let start = Instant::now();
         let answer = Self::implementation(&input);
         let elapsed = start.elapsed();
         println!("Answer `{}`; Solution ran in {:?}", answer, elapsed);
         if Self::do_post_answer() {
-            submit_answer(Self::YEAR, Self::DAY, Self::PART, &answer).unwrap();
+            submit_answer(year, day, Self::PART, &answer).unwrap();
         }
     }
 
@@ -43,7 +60,8 @@ pub trait AocSolution {
     }
 
     fn ydp() -> String {
-        format!("y{}d{}p{}", Self::YEAR, Self::DAY, Self::PART)
+        let (year, day) = Self::year_day();
+        format!("y{}d{}p{}", year, day, Self::PART)
     }
 
     fn map_example_input(example: &str) -> String {
@@ -51,7 +69,8 @@ pub trait AocSolution {
     }
 
     fn get_examples() -> Vec<(String, String)> {
-        get_examples(Self::YEAR, Self::DAY, Self::PART)
+        let (year, day) = Self::year_day();
+        get_examples(year, day, Self::PART)
             .unwrap()
             .iter()
             .map(|(example, expected)| -> (String, String) {

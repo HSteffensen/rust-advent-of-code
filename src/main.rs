@@ -1,6 +1,7 @@
 use common::solution::AocSolution;
 
 mod common;
+mod template;
 mod y2018;
 mod y2022;
 mod y2023;

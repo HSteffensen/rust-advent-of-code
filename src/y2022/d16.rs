@@ -13,11 +13,8 @@ use nom::{
 
 use crate::common::solution::AocSolution;
 
-use super::Y;
-
 struct Part1 {}
 struct Part2 {}
-const D: u32 = 16;
 
 #[derive(Debug)]
 struct ValveCave<'a> {
@@ -151,9 +148,10 @@ fn most_pressure_released<'a>(
 }
 
 impl AocSolution for Part1 {
-    const YEAR: u32 = Y;
-    const DAY: u32 = D;
     const PART: u32 = 1;
+    fn solution_path() -> String {
+        module_path!().to_string()
+    }
 
     fn implementation(input: &str) -> String {
         let cave_map = parse_input(input);
@@ -205,9 +203,10 @@ fn most_pressure_released_p2<'a>(
 }
 
 impl AocSolution for Part2 {
-    const YEAR: u32 = Y;
-    const DAY: u32 = D;
     const PART: u32 = 2;
+    fn solution_path() -> String {
+        module_path!().to_string()
+    }
 
     fn implementation(input: &str) -> String {
         let cave_map = parse_input(input);

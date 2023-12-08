@@ -10,11 +10,8 @@ use nom::{
 
 use crate::common::solution::AocSolution;
 
-use super::Y;
-
 struct Part1 {}
 struct Part2 {}
-const D: u32 = 6;
 
 fn parse_numbers(numbers: &str) -> IResult<&str, Vec<u64>> {
     separated_list1(space1, complete::u64)(numbers)
@@ -55,9 +52,10 @@ fn count_winnable((time, distance): (u64, u64)) -> usize {
 }
 
 impl AocSolution for Part1 {
-    const YEAR: u32 = Y;
-    const DAY: u32 = D;
     const PART: u32 = 1;
+    fn solution_path() -> String {
+        module_path!().to_string()
+    }
 
     fn implementation(input: &str) -> String {
         let races = parse_input(input);
@@ -70,9 +68,10 @@ impl AocSolution for Part1 {
 }
 
 impl AocSolution for Part2 {
-    const YEAR: u32 = Y;
-    const DAY: u32 = D;
     const PART: u32 = 2;
+    fn solution_path() -> String {
+        module_path!().to_string()
+    }
 
     fn implementation(input: &str) -> String {
         let race = parse_input_2(input);

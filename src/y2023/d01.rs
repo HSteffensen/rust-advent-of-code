@@ -12,11 +12,8 @@ use nom::{
 
 use crate::common::solution::AocSolution;
 
-use super::Y;
-
 struct Part1 {}
 struct Part2 {}
-const D: u32 = 1;
 
 fn first_digit(input: &str) -> char {
     let digit = input.chars().find_or_first(|c| c.is_numeric());
@@ -27,9 +24,10 @@ fn first_digit(input: &str) -> char {
 }
 
 impl AocSolution for Part1 {
-    const YEAR: u32 = Y;
-    const DAY: u32 = D;
     const PART: u32 = 1;
+    fn solution_path() -> String {
+        module_path!().to_string()
+    }
 
     fn implementation(input: &str) -> String {
         input
@@ -92,9 +90,10 @@ fn parse_digits_or_word_numbers(input: &str) -> i32 {
 }
 
 impl AocSolution for Part2 {
-    const YEAR: u32 = Y;
-    const DAY: u32 = D;
     const PART: u32 = 2;
+    fn solution_path() -> String {
+        module_path!().to_string()
+    }
 
     fn implementation(input: &str) -> String {
         input
@@ -145,9 +144,10 @@ fn find_digits(input: &str) -> u32 {
 }
 
 impl AocSolution for Part1Simpler {
-    const YEAR: u32 = Y;
-    const DAY: u32 = D;
     const PART: u32 = 1;
+    fn solution_path() -> String {
+        module_path!().to_string()
+    }
 
     fn implementation(input: &str) -> String {
         input.lines().map(find_digits).sum::<u32>().to_string()
@@ -169,9 +169,10 @@ fn replace_number_words(input: &str) -> String {
 }
 
 impl AocSolution for Part2Simpler {
-    const YEAR: u32 = Y;
-    const DAY: u32 = D;
     const PART: u32 = 2;
+    fn solution_path() -> String {
+        module_path!().to_string()
+    }
 
     fn implementation(input: &str) -> String {
         input

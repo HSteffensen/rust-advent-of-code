@@ -2,16 +2,14 @@ use std::collections::{HashMap, HashSet};
 
 use crate::common::solution::AocSolution;
 
-use super::Y;
-
 pub struct Part1 {}
 struct Part2 {}
-const D: u32 = 2;
 
 impl AocSolution for Part1 {
-    const YEAR: u32 = Y;
-    const DAY: u32 = D;
     const PART: u32 = 1;
+    fn solution_path() -> String {
+        module_path!().to_string()
+    }
 
     fn implementation(input: &str) -> String {
         let mut count2s = 0;
@@ -47,9 +45,10 @@ fn count_letters(input: &str) -> HashMap<char, u32> {
 }
 
 impl AocSolution for Part2 {
-    const YEAR: u32 = Y;
-    const DAY: u32 = D;
     const PART: u32 = 2;
+    fn solution_path() -> String {
+        module_path!().to_string()
+    }
 
     fn implementation(input: &str) -> String {
         let mut seen = HashSet::new();

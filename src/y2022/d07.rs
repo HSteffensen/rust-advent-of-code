@@ -2,11 +2,8 @@ use std::str::Lines;
 
 use crate::common::solution::AocSolution;
 
-use super::Y;
-
 struct Part1 {}
 struct Part2 {}
-const D: u32 = 7;
 
 enum FsObject {
     Dir(String, Vec<FsObject>, usize),
@@ -61,9 +58,10 @@ fn sum_objects_at_most(limit: usize, object: &FsObject) -> usize {
 }
 
 impl AocSolution for Part1 {
-    const YEAR: u32 = Y;
-    const DAY: u32 = D;
     const PART: u32 = 1;
+    fn solution_path() -> String {
+        module_path!().to_string()
+    }
 
     fn implementation(input: &str) -> String {
         sum_objects_at_most(100000, &parse_input(input)).to_string()
@@ -94,18 +92,23 @@ fn smallest_dir_at_least(
 }
 
 impl AocSolution for Part2 {
-    const YEAR: u32 = Y;
-    const DAY: u32 = D;
     const PART: u32 = 2;
+    fn solution_path() -> String {
+        module_path!().to_string()
+    }
 
     fn implementation(input: &str) -> String {
         let rootdir = parse_input(input);
-        let FsObject::Dir(_, _, rootdir_size) = rootdir else {unreachable!()};
+        let FsObject::Dir(_, _, rootdir_size) = rootdir else {
+            unreachable!()
+        };
         let fs_size = 70000000;
         let needed_space = 30000000;
         let unused_space = fs_size - rootdir_size;
         let space_to_free = needed_space - unused_space;
-        let Some(answer) = smallest_dir_at_least(space_to_free, rootdir_size, &rootdir) else {unreachable!()};
+        let Some(answer) = smallest_dir_at_least(space_to_free, rootdir_size, &rootdir) else {
+            unreachable!()
+        };
         answer.to_string()
     }
 }
@@ -158,9 +161,10 @@ fn directory_sizes<'a>(input: &mut impl Iterator<Item = &'a str>) -> Vec<u64> {
 }
 
 impl AocSolution for Part1Impl2 {
-    const YEAR: u32 = Y;
-    const DAY: u32 = D;
     const PART: u32 = 1;
+    fn solution_path() -> String {
+        module_path!().to_string()
+    }
 
     fn implementation(input: &str) -> String {
         let sizes = directory_sizes(&mut input.lines());
@@ -174,9 +178,10 @@ impl AocSolution for Part1Impl2 {
 }
 
 impl AocSolution for Part2Impl2 {
-    const YEAR: u32 = Y;
-    const DAY: u32 = D;
     const PART: u32 = 2;
+    fn solution_path() -> String {
+        module_path!().to_string()
+    }
 
     fn implementation(input: &str) -> String {
         let sizes = directory_sizes(&mut input.lines());

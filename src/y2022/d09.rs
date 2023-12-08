@@ -2,11 +2,8 @@ use std::collections::HashSet;
 
 use crate::common::solution::AocSolution;
 
-use super::Y;
-
 struct Part1 {}
 struct Part2 {}
-const D: u32 = 9;
 
 fn move_tail((hx, hy): (i32, i32), (tx, ty): (i32, i32)) -> (i32, i32) {
     let distance_x = hx - tx;
@@ -52,9 +49,10 @@ fn move_head_command(
 }
 
 impl AocSolution for Part1 {
-    const YEAR: u32 = Y;
-    const DAY: u32 = D;
     const PART: u32 = 1;
+    fn solution_path() -> String {
+        module_path!().to_string()
+    }
 
     fn implementation(input: &str) -> String {
         let mut visited: HashSet<(i32, i32)> = HashSet::new();
@@ -90,9 +88,10 @@ fn move_rope(command: &str, visited: &mut HashSet<(i32, i32)>, rope: &mut Vec<(i
 struct Part1Impl2;
 
 impl AocSolution for Part1Impl2 {
-    const YEAR: u32 = Y;
-    const DAY: u32 = D;
     const PART: u32 = 1;
+    fn solution_path() -> String {
+        module_path!().to_string()
+    }
 
     fn implementation(input: &str) -> String {
         let mut visited: HashSet<(i32, i32)> = HashSet::new();
@@ -106,9 +105,10 @@ impl AocSolution for Part1Impl2 {
 }
 
 impl AocSolution for Part2 {
-    const YEAR: u32 = Y;
-    const DAY: u32 = D;
     const PART: u32 = 2;
+    fn solution_path() -> String {
+        module_path!().to_string()
+    }
 
     fn implementation(input: &str) -> String {
         let mut visited: HashSet<(i32, i32)> = HashSet::new();

@@ -2,11 +2,8 @@ use regex::Regex;
 
 use crate::common::solution::AocSolution;
 
-use super::Y;
-
 struct Part1 {}
 struct Part2 {}
-const D: u32 = 5;
 
 struct MoveOrder {
     amount: u32,
@@ -72,9 +69,10 @@ fn parse_moves(input: &str) -> Vec<MoveOrder> {
 }
 
 impl AocSolution for Part1 {
-    const YEAR: u32 = Y;
-    const DAY: u32 = D;
     const PART: u32 = 1;
+    fn solution_path() -> String {
+        module_path!().to_string()
+    }
 
     fn implementation(input: &str) -> String {
         let (mut stacks, moves) = parse_input(input);
@@ -96,9 +94,10 @@ impl AocSolution for Part1 {
 }
 
 impl AocSolution for Part2 {
-    const YEAR: u32 = Y;
-    const DAY: u32 = D;
     const PART: u32 = 2;
+    fn solution_path() -> String {
+        module_path!().to_string()
+    }
 
     fn implementation(input: &str) -> String {
         let (mut stacks, moves) = parse_input(input);

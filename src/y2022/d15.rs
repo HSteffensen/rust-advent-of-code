@@ -10,11 +10,8 @@ use nom::{
 
 use crate::common::solution::AocSolution;
 
-use super::Y;
-
 struct Part1 {}
 struct Part2 {}
-const D: u32 = 15;
 
 #[derive(Debug)]
 struct Point2d(i32, i32);
@@ -138,9 +135,10 @@ fn parse_input(input: &str) -> Vec<Sensor> {
 }
 
 impl AocSolution for Part1 {
-    const YEAR: u32 = Y;
-    const DAY: u32 = D;
     const PART: u32 = 1;
+    fn solution_path() -> String {
+        module_path!().to_string()
+    }
 
     fn map_example_input(example: &str) -> String {
         format!("test\n{}", example)
@@ -180,9 +178,10 @@ impl AocSolution for Part1 {
 }
 
 impl AocSolution for Part2 {
-    const YEAR: u32 = Y;
-    const DAY: u32 = D;
     const PART: u32 = 2;
+    fn solution_path() -> String {
+        module_path!().to_string()
+    }
 
     fn map_example_input(example: &str) -> String {
         format!("test\n{}", example)
