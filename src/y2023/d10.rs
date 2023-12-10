@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 use itertools::Itertools;
 
@@ -48,12 +48,7 @@ struct PipeGrid {
 }
 
 #[derive(Debug, Clone)]
-struct PipeStep {
-    x: usize,
-    y: usize,
-    direction: StepDirection,
-    winding: i32,
-}
+struct PipeStep(StepDirection, (usize, usize));
 
 impl PipeGrid {
     fn get_pos(&self, index: usize) -> (usize, usize) {
@@ -85,12 +80,7 @@ impl PipeGrid {
             Some(PipeSection::Horizontal)
             | Some(PipeSection::BendDownLeft)
             | Some(PipeSection::BendLeftUp) => {
-                return PipeStep {
-                    x: start_x + 1,
-                    y: start_y,
-                    direction: StepDirection::Right,
-                    winding: 0,
-                }
+                return PipeStep(StepDirection::Right, (start_x + 1, start_y))
             }
             _ => {}
         }
@@ -98,12 +88,7 @@ impl PipeGrid {
             Some(PipeSection::Vertical)
             | Some(PipeSection::BendRightDown)
             | Some(PipeSection::BendDownLeft) => {
-                return PipeStep {
-                    x: start_x,
-                    y: start_y + 1,
-                    direction: StepDirection::Down,
-                    winding: 0,
-                }
+                return PipeStep(StepDirection::Down, (start_x, start_y + 1))
             }
             _ => {}
         }
@@ -111,12 +96,7 @@ impl PipeGrid {
             Some(PipeSection::Horizontal)
             | Some(PipeSection::BendUpRight)
             | Some(PipeSection::BendRightDown) => {
-                return PipeStep {
-                    x: start_x - 1,
-                    y: start_y,
-                    direction: StepDirection::Left,
-                    winding: 0,
-                }
+                return PipeStep(StepDirection::Left, (start_x - 1, start_y))
             }
             _ => {}
         }
@@ -124,96 +104,38 @@ impl PipeGrid {
             Some(PipeSection::Vertical)
             | Some(PipeSection::BendLeftUp)
             | Some(PipeSection::BendUpRight) => {
-                return PipeStep {
-                    x: start_x,
-                    y: start_y - 1,
-                    direction: StepDirection::Up,
-                    winding: 0,
-                }
+                return PipeStep(StepDirection::Up, (start_x, start_y - 1))
             }
             _ => {}
         }
         unreachable!("Expect some adjacent pipe to point towards the start")
     }
 
-    fn next_step(&self, prev_step: &PipeStep) -> PipeStep {
-        let x = prev_step.x;
-        let y = prev_step.y;
-        let winding = prev_step.winding;
+    fn next_step(&self, PipeStep(step, (x, y)): &PipeStep) -> PipeStep {
+        let x = *x;
+        let y = *y;
         let current_pipe = self.get(x, y).unwrap();
-        match (&prev_step.direction, current_pipe) {
-            (StepDirection::Up, PipeSection::Vertical) => PipeStep {
-                x,
-                y: y - 1,
-                direction: StepDirection::Up,
-                winding,
-            },
-            (StepDirection::Right, PipeSection::BendLeftUp) => PipeStep {
-                x,
-                y: y - 1,
-                direction: StepDirection::Up,
-                winding: winding - 1,
-            },
-            (StepDirection::Left, PipeSection::BendUpRight) => PipeStep {
-                x,
-                y: y - 1,
-                direction: StepDirection::Up,
-                winding: winding + 1,
-            },
-            (StepDirection::Right, PipeSection::Horizontal) => PipeStep {
-                x: x + 1,
-                y,
-                direction: StepDirection::Right,
-                winding,
-            },
-            (StepDirection::Down, PipeSection::BendUpRight) => PipeStep {
-                x: x + 1,
-                y,
-                direction: StepDirection::Right,
-                winding: winding - 1,
-            },
-            (StepDirection::Up, PipeSection::BendRightDown) => PipeStep {
-                x: x + 1,
-                y,
-                direction: StepDirection::Right,
-                winding: winding + 1,
-            },
-            (StepDirection::Down, PipeSection::Vertical) => PipeStep {
-                x,
-                y: y + 1,
-                direction: StepDirection::Down,
-                winding,
-            },
-            (StepDirection::Left, PipeSection::BendRightDown) => PipeStep {
-                x,
-                y: y + 1,
-                direction: StepDirection::Down,
-                winding: winding - 1,
-            },
-            (StepDirection::Right, PipeSection::BendDownLeft) => PipeStep {
-                x,
-                y: y + 1,
-                direction: StepDirection::Down,
-                winding: winding + 1,
-            },
-            (StepDirection::Left, PipeSection::Horizontal) => PipeStep {
-                x: x - 1,
-                y,
-                direction: StepDirection::Left,
-                winding,
-            },
-            (StepDirection::Up, PipeSection::BendDownLeft) => PipeStep {
-                x: x - 1,
-                y,
-                direction: StepDirection::Left,
-                winding: winding - 1,
-            },
-            (StepDirection::Down, PipeSection::BendLeftUp) => PipeStep {
-                x: x - 1,
-                y,
-                direction: StepDirection::Left,
-                winding: winding + 1,
-            },
+        match (step, current_pipe) {
+            (StepDirection::Up, PipeSection::Vertical)
+            | (StepDirection::Right, PipeSection::BendLeftUp)
+            | (StepDirection::Left, PipeSection::BendUpRight) => {
+                PipeStep(StepDirection::Up, (x, y - 1))
+            }
+            (StepDirection::Right, PipeSection::Horizontal)
+            | (StepDirection::Up, PipeSection::BendRightDown)
+            | (StepDirection::Down, PipeSection::BendUpRight) => {
+                PipeStep(StepDirection::Right, (x + 1, y))
+            }
+            (StepDirection::Down, PipeSection::Vertical)
+            | (StepDirection::Left, PipeSection::BendRightDown)
+            | (StepDirection::Right, PipeSection::BendDownLeft) => {
+                PipeStep(StepDirection::Down, (x, y + 1))
+            }
+            (StepDirection::Left, PipeSection::Horizontal)
+            | (StepDirection::Up, PipeSection::BendDownLeft)
+            | (StepDirection::Down, PipeSection::BendLeftUp) => {
+                PipeStep(StepDirection::Left, (x - 1, y))
+            }
             _ => unreachable!("Unexpected step"),
         }
     }
@@ -240,8 +162,7 @@ impl<'a> Iterator for PipePath<'a> {
         if self.finished {
             return None;
         }
-        let x = self.current_step.x;
-        let y = self.current_step.y;
+        let (x, y) = self.current_step.1;
         let current_pipe = self.grid.get(x, y);
         match current_pipe {
             Some(PipeSection::Start) => {
@@ -288,26 +209,35 @@ impl AocSolution for Part2 {
 
     fn implementation(input: &str) -> String {
         let grid = parse_input(input);
-
+        let pipe_positions: HashMap<(usize, usize), &PipeSection> = HashMap::from_iter(
+            grid.path()
+                .map(|p| (p.1, grid.get(p.1 .0, p.1 .1).unwrap())),
+        );
         let mut count = 0;
         for (y, line) in input.lines().enumerate() {
-            let mut line_pipes = vec![];
+            let mut vert_count = 0;
+            let mut last_corner = None;
             for (x, _) in line.chars().enumerate() {
-                if let Some(pipe) = grid.get(x, y) {
-                    match pipe {
-                        PipeSection::Vertical
-                        | PipeSection::BendRightDown
-                        | PipeSection::BendUpRight => line_pipes.push(pipe),
-
-                        PipeSection::BendLeftUp => {
-                            todo!()
+                if let Some(pipe) = pipe_positions.get(&(x, y)) {
+                    // bug: probably gives a wrong answer if the Start pipe is part of a vertical s-bend
+                    // but it does give the correct answer if the Start pipe is part of a U-bend
+                    if matches!(pipe, PipeSection::Vertical) {
+                        vert_count += 1;
+                    } else if matches!(pipe, PipeSection::BendUpRight | PipeSection::BendRightDown)
+                    {
+                        last_corner = Some(pipe);
+                    } else if matches!(pipe, PipeSection::BendDownLeft) {
+                        if matches!(last_corner, Some(PipeSection::BendUpRight)) {
+                            vert_count += 1;
                         }
-                        PipeSection::BendDownLeft => todo!(),
-
-                        _ => {}
+                        last_corner = None
+                    } else if matches!(pipe, PipeSection::BendLeftUp) {
+                        if matches!(last_corner, Some(PipeSection::BendRightDown)) {
+                            vert_count += 1;
+                        }
+                        last_corner = None
                     }
-                } else if line_pipes.len() % 2 == 1 {
-                    println!("{},{} is in", x, y);
+                } else if vert_count % 2 == 1 {
                     count += 1;
                 }
             }
@@ -335,4 +265,3 @@ fn p2_pull_examples() {
 fn p2_run() {
     Part2::solve();
 }
-// (1, 4): Vertical, (9, 6): Vertical, (5, 1): Horizontal, (2, 5): BendUpRight, (8, 2): BendDownLeft, (1, 3): Vertical, (8, 1): Horizontal, (4, 6): Vertical, (7, 1): Horizontal, (1, 1): Start, (4, 1): Horizontal, (9, 7): BendLeftUp, (9, 2): Vertical, (6, 2): Horizontal, (6, 5): BendRightDown, (3, 2): Horizontal, (7, 5): Horizontal, (7, 2): Horizontal, (2, 3): Vertical, (4, 7): BendLeftUp, (1, 6): Vertical, (4, 2): Horizontal, (9, 3): Vertical, (9, 4): Vertical, (9, 1): BendDownLeft, (6, 6): Vertical, (1, 5): Vertical, (1, 2): Vertical, (8, 4): Vertical, (2, 1): Horizontal, (2, 2): BendRightDown, (3, 5): Horizontal, (4, 5): BendDownLeft, (7, 7): Horizontal, (3, 7): Horizontal, (8, 3): Vertical, (8, 5): BendLeftUp, (9, 5): Vertical, (8, 7): Horizontal, (6, 1): Horizontal, (2, 7): Horizontal, (6, 7): BendUpRight, (3, 1): Horizontal, (1, 7): BendUpRight, (2, 4): Vertical, (5, 2): Horizontal
