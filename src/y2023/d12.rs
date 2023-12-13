@@ -229,3 +229,141 @@ fn p2_pull_examples() {
 fn p2_run() {
     Part2::solve();
 }
+
+struct Part1Again {}
+struct Part2Again {}
+
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
+struct PermutationTrack {
+    cluster_index: usize,
+    cluster_count: u32,
+    in_cluster: bool,
+}
+
+impl RecordRow {
+    fn permute_damaged(&self, permutation: &PermutationTrack) -> Option<PermutationTrack> {
+        if permutation.cluster_index >= self.cluster_sizes.len() {
+            return None;
+        }
+        if permutation.cluster_count < self.cluster_sizes[permutation.cluster_index] {
+            Some(PermutationTrack {
+                cluster_index: permutation.cluster_index,
+                cluster_count: permutation.cluster_count + 1,
+                in_cluster: true,
+            })
+        } else {
+            None
+        }
+    }
+
+    fn permute_empty(&self, permutation: &PermutationTrack) -> Option<PermutationTrack> {
+        if permutation.in_cluster {
+            if permutation.cluster_count == self.cluster_sizes[permutation.cluster_index] {
+                Some(PermutationTrack {
+                    cluster_index: permutation.cluster_index + 1,
+                    cluster_count: 0,
+                    in_cluster: false,
+                })
+            } else {
+                None
+            }
+        } else {
+            Some(*permutation)
+        }
+    }
+
+    fn count_possibilities_again(&self) -> usize {
+        let mut permutations = HashMap::new();
+        permutations.insert(
+            PermutationTrack {
+                cluster_index: 0,
+                cluster_count: 0,
+                in_cluster: false,
+            },
+            1,
+        );
+
+        for spring in self.springs.iter() {
+            let mut new_permutations = HashMap::new();
+            if matches!(spring, SpringRecord::Damaged | SpringRecord::Unknown) {
+                permutations
+                    .iter()
+                    .filter_map(|(p, c)| self.permute_damaged(p).map(|p2| (p2, c)))
+                    .for_each(|(p, c)| {
+                        let e = new_permutations.entry(p).or_insert(0);
+                        *e += c;
+                    })
+            }
+            if matches!(spring, SpringRecord::Empty | SpringRecord::Unknown) {
+                permutations
+                    .iter()
+                    .filter_map(|(p, c)| self.permute_empty(p).map(|p2| (p2, c)))
+                    .for_each(|(p, c)| {
+                        let e = new_permutations.entry(p).or_insert(0);
+                        *e += c;
+                    })
+            }
+            permutations = new_permutations;
+        }
+        permutations
+            .into_iter()
+            .filter(|(p, _)| {
+                p.cluster_index == self.cluster_sizes.len()
+                    || (p.cluster_index == self.cluster_sizes.len() - 1
+                        && p.cluster_count == self.cluster_sizes[p.cluster_index])
+            })
+            .map(|(_, c)| c)
+            .sum()
+    }
+}
+
+impl AocSolution for Part1Again {
+    const PART: u32 = 1;
+    fn solution_path() -> String {
+        module_path!().to_string()
+    }
+
+    fn implementation(input: &str) -> String {
+        input
+            .lines()
+            .map(parse_line)
+            .map(|l| l.count_possibilities_again())
+            .sum::<usize>()
+            .to_string()
+    }
+}
+
+impl AocSolution for Part2Again {
+    const PART: u32 = 2;
+    fn solution_path() -> String {
+        module_path!().to_string()
+    }
+
+    fn implementation(input: &str) -> String {
+        input
+            .lines()
+            .map(parse_line)
+            .map(|l| l.into_part_2().count_possibilities_again())
+            .sum::<usize>()
+            .to_string()
+    }
+}
+
+#[test]
+fn test_count_again() {
+    assert_eq!(1, parse_line("???.### 1,1,3").count_possibilities_again());
+    assert_eq!(
+        10,
+        parse_line("?###???????? 3,2,1").count_possibilities_again()
+    );
+}
+
+#[test]
+fn p1_run_again() {
+    Part1Again::solve();
+}
+
+#[test]
+fn p2_run_again() {
+    Part2Again::solve();
+}
