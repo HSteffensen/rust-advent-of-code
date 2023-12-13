@@ -1,4 +1,5 @@
 use itertools::Itertools;
+use strsim::hamming;
 
 use crate::common::solution::AocSolution;
 
@@ -104,11 +105,87 @@ impl AocSolution for Part1 {
         input
             .split("\n\n")
             .map(|grid| {
-                100 * find_horizontal_mirror(grid) + find_horizontal_mirror(&transpose_string(grid))
+                let horizontal_mirror = find_horizontal_mirror(grid);
+                if horizontal_mirror != 0 {
+                    100 * horizontal_mirror
+                } else {
+                    find_horizontal_mirror(&transpose_string(grid))
+                }
             })
             .sum::<usize>()
             .to_string()
     }
+}
+
+fn find_horizontal_mirror_smudged(input: &str) -> usize {
+    let lines = input.lines().collect_vec();
+    'outer: for i in 0..lines.len() - 1 {
+        let mut smudge_found = false;
+        let a = lines[i];
+        let b = lines[i + 1];
+        let difference = hamming(a, b).unwrap();
+        if difference == 1 {
+            smudge_found = true;
+        } else if a != b {
+            continue;
+        }
+        let possible_mirror_size = (lines.len().abs_diff(i + 1)).min(i + 1);
+        for j in 1..possible_mirror_size {
+            let a = lines[i - j];
+            let b = lines[i + 1 + j];
+            let difference = hamming(a, b).unwrap();
+            if difference == 1 && !smudge_found {
+                smudge_found = true;
+                continue;
+            } else if a != b {
+                continue 'outer;
+            }
+        }
+        if smudge_found {
+            return i + 1;
+        }
+    }
+    0
+}
+
+#[test]
+fn test_find_horizontal_mirror_smudged() {
+    assert_eq!(
+        3,
+        find_horizontal_mirror_smudged(
+            "#.##..##.
+..#.##.#.
+##......#
+##......#
+..#.##.#.
+..##..##.
+#.#.##.#."
+        )
+    );
+    assert_eq!(
+        1,
+        find_horizontal_mirror_smudged(
+            "#...##..#
+#....#..#
+..##..###
+#####.##.
+#####.##.
+..##..###
+#....#..#"
+        )
+    );
+    assert_eq!(
+        0,
+        find_horizontal_mirror_smudged(&transpose_string(
+            "#.##..##.
+..#.##.#.
+##......#
+##......#
+..#.##.#.
+..##..##.
+#.#.##.#."
+        ))
+    )
 }
 
 impl AocSolution for Part2 {
@@ -118,7 +195,18 @@ impl AocSolution for Part2 {
     }
 
     fn implementation(input: &str) -> String {
-        todo!("{}", input)
+        input
+            .split("\n\n")
+            .map(|grid| {
+                let horizontal_mirror = find_horizontal_mirror_smudged(grid);
+                if horizontal_mirror != 0 {
+                    100 * horizontal_mirror
+                } else {
+                    find_horizontal_mirror_smudged(&transpose_string(grid))
+                }
+            })
+            .sum::<usize>()
+            .to_string()
     }
 }
 
