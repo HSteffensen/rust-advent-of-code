@@ -1,4 +1,4 @@
-use std::{collections::HashSet, fmt::Display};
+use std::{collections::HashSet, fmt::Display, mem::swap};
 
 use itertools::Itertools;
 
@@ -69,6 +69,20 @@ impl RocksGrid {
     fn count_load(&self) -> usize {
         self.round_rocks.iter().map(|(_, y)| self.height - y).sum()
     }
+
+    fn rotate_clockwise(&mut self) {
+        self.round_rocks = HashSet::from_iter(
+            self.round_rocks
+                .iter()
+                .map(|(x, y)| (self.height - y - 1, *x)),
+        );
+        self.square_rocks = HashSet::from_iter(
+            self.square_rocks
+                .iter()
+                .map(|(x, y)| (self.height - y - 1, *x)),
+        );
+        swap(&mut self.width, &mut self.height);
+    }
 }
 
 fn parse_input(input: &str) -> RocksGrid {
@@ -119,7 +133,20 @@ impl AocSolution for Part2 {
     }
 
     fn implementation(input: &str) -> String {
-        todo!("{}", input)
+        let mut rocks = parse_input(input);
+        let turns = 1000;
+        for _i in 0..turns {
+            rocks.tilt_north(); // north
+            rocks.rotate_clockwise();
+            rocks.tilt_north(); // west
+            rocks.rotate_clockwise();
+            rocks.tilt_north(); // south
+            rocks.rotate_clockwise();
+            rocks.tilt_north(); // east
+            rocks.rotate_clockwise();
+        }
+        println!("Final:\n{}", rocks);
+        rocks.count_load().to_string()
     }
 }
 
