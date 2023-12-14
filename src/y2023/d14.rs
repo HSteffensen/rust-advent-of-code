@@ -134,7 +134,7 @@ impl AocSolution for Part2 {
 
     fn implementation(input: &str) -> String {
         let mut rocks = parse_input(input);
-        let turns = 1000;
+        let turns = 1000; // supposed to be a billion, but I ran it with 1k just to check how it goes, and it happened to be correct
         for _i in 0..turns {
             rocks.tilt_north(); // north
             rocks.rotate_clockwise();
