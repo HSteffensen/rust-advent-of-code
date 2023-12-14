@@ -1,4 +1,8 @@
-use std::{collections::HashSet, fmt::Display, mem::swap};
+use std::{
+    collections::{HashMap, HashSet},
+    fmt::Display,
+    mem::swap,
+};
 
 use itertools::Itertools;
 
@@ -134,8 +138,11 @@ impl AocSolution for Part2 {
 
     fn implementation(input: &str) -> String {
         let mut rocks = parse_input(input);
-        let turns = 1000; // supposed to be a billion, but I ran it with 1k just to check how it goes, and it happened to be correct
-        for _i in 0..turns {
+        let mut visited_turn = HashMap::new();
+        let mut turns_cache = HashMap::new();
+        let mut turns = 0;
+        let loop_size;
+        loop {
             rocks.tilt_north(); // north
             rocks.rotate_clockwise();
             rocks.tilt_north(); // west
@@ -144,9 +151,21 @@ impl AocSolution for Part2 {
             rocks.rotate_clockwise();
             rocks.tilt_north(); // east
             rocks.rotate_clockwise();
+            turns += 1;
+            let cache_key = rocks.round_rocks.iter().copied().sorted().collect_vec();
+            if visited_turn.contains_key(&cache_key) {
+                loop_size = turns - visited_turn[&cache_key];
+                break;
+            }
+            visited_turn.insert(cache_key, turns);
+            turns_cache.insert(turns, rocks.count_load());
         }
-        println!("Final:\n{}", rocks);
-        rocks.count_load().to_string()
+        let loop_target = 1_000_000_000;
+        let loop_extra = (loop_target - turns) % loop_size;
+        turns_cache
+            .get(&(turns - loop_size + loop_extra))
+            .unwrap()
+            .to_string()
     }
 }
 
