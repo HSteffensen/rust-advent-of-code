@@ -1,8 +1,8 @@
-use std::collections::{BinaryHeap, HashMap, HashSet};
+use std::collections::{BinaryHeap, HashSet};
 
 use itertools::Itertools;
 use nom::{
-    character::complete::{self, newline, one_of},
+    character::complete::{newline, one_of},
     combinator::map,
     error::Error,
     multi::{many1, separated_list1},
@@ -57,7 +57,11 @@ impl Ord for CrucibleStep {
     }
 }
 
-fn best_crucible_path_coolness(grid: &SquareGrid<u64>) -> u64 {
+fn best_crucible_path_coolness(
+    grid: &SquareGrid<u64>,
+    min_steps_same_direction: usize,
+    max_steps_same_direction: usize,
+) -> u64 {
     let mut queue = BinaryHeap::new();
     let mut visited: HashSet<(usize, usize, Direction, u64)> = HashSet::new();
     queue.push(CrucibleStep {
@@ -79,12 +83,6 @@ fn best_crucible_path_coolness(grid: &SquareGrid<u64>) -> u64 {
             .iter()
             .map(|s| (s.x, s.y, s.direction, s.steps_same_direction)),
     );
-    let worst_case: u64 = (0..grid.width)
-        .map(|x| grid.get(x, x).unwrap())
-        .sum::<u64>()
-        + (1..grid.height)
-            .map(|x| grid.get(x, x - 1).unwrap())
-            .sum::<u64>();
     while let Some(step) = queue.pop() {
         if step.x == grid.width - 1 && step.y == grid.height - 1 {
             return step.coolness;
@@ -94,12 +92,9 @@ fn best_crucible_path_coolness(grid: &SquareGrid<u64>) -> u64 {
             Direction::Left | Direction::Right => [Direction::Up, Direction::Down],
         };
         for direction in directions {
-            let next_steps = (1..4)
+            let next_steps = (min_steps_same_direction..=max_steps_same_direction)
                 .filter_map(|i| crucible_travel(grid, &step, direction, i))
-                .filter(|s| {
-                    s.coolness <= worst_case
-                        && !visited.contains(&(s.x, s.y, s.direction, s.steps_same_direction))
-                })
+                .filter(|s| !visited.contains(&(s.x, s.y, s.direction, s.steps_same_direction)))
                 .collect_vec();
             visited.extend(
                 next_steps
@@ -142,7 +137,7 @@ impl AocSolution for Part1 {
 
     fn implementation(input: &str) -> String {
         let grid = parse_input(input);
-        best_crucible_path_coolness(&grid).to_string()
+        best_crucible_path_coolness(&grid, 1, 3).to_string()
     }
 }
 
@@ -153,7 +148,8 @@ impl AocSolution for Part2 {
     }
 
     fn implementation(input: &str) -> String {
-        todo!("{}", input)
+        let grid = parse_input(input);
+        best_crucible_path_coolness(&grid, 4, 10).to_string()
     }
 }
 
