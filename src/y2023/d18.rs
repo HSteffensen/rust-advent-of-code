@@ -103,37 +103,6 @@ fn count_outside<T>(grid: &SquareGrid<Option<T>>) -> usize {
     count
 }
 
-fn try_count_inside<T>(
-    grid: &SquareGrid<Option<T>>,
-    start_pos: (usize, usize),
-    fail_pos: (usize, usize),
-) -> Option<usize> {
-    if matches!(grid.get(start_pos.0, start_pos.1), Some(Some(_))) {
-        return None;
-    }
-    let mut queue = vec![start_pos];
-    let mut visited: HashSet<(usize, usize)> = HashSet::new();
-    visited.insert(start_pos);
-    let mut count = 1;
-    while let Some((x, y)) = queue.pop() {
-        if (x, y) == fail_pos {
-            return None;
-        }
-        if matches!(grid.get(x, y), Some(Some(_))) {
-            continue;
-        }
-        count += 1;
-        let new_positions = grid
-            .neighbors_8(x, y)
-            .into_iter()
-            .filter(|p| !visited.contains(p))
-            .collect_vec();
-        queue.extend(new_positions.iter());
-        visited.extend(new_positions);
-    }
-    Some(count)
-}
-
 fn count_inside<T>(grid: &SquareGrid<Option<T>>) -> usize {
     (grid.width * grid.height) - count_outside(grid)
 }
