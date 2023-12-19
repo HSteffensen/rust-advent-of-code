@@ -1,5 +1,7 @@
 use std::fmt::{Debug, Display};
 
+use itertools::Itertools;
+
 #[derive(Debug)]
 pub struct SquareGrid<T> {
     pub width: usize,
@@ -12,6 +14,7 @@ impl<T> SquareGrid<T> {
         (0..self.width).contains(&x) && (0..self.height).contains(&y)
     }
 
+    #[allow(dead_code)]
     pub fn get_pos(&self, index: usize) -> (usize, usize) {
         (index % self.width, index / self.width)
     }
@@ -21,6 +24,15 @@ impl<T> SquareGrid<T> {
             self.data.get(y * self.width + x)
         } else {
             None
+        }
+    }
+
+    pub fn set(&mut self, x: usize, y: usize, value: T) -> bool {
+        if self.contains(x, y) {
+            self.data[y * self.width + x] = value;
+            true
+        } else {
+            false
         }
     }
 
@@ -48,6 +60,20 @@ impl<T> SquareGrid<T> {
         } else {
             None
         }
+    }
+
+    pub fn neighbors_8(&self, x: usize, y: usize) -> Vec<(usize, usize)> {
+        (0..3)
+            .cartesian_product(0..3)
+            .filter(|(dx, dy)| {
+                (x + dx) != 0
+                    && (y + dy) != 0
+                    && (x + dx) <= self.width
+                    && (y + dy) <= self.height
+                    && (dx != &1 || dy != &1)
+            })
+            .map(|(dx, dy)| (x + dx - 1, y + dy - 1))
+            .collect_vec()
     }
 }
 
