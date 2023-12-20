@@ -28,7 +28,7 @@ enum WorkflowCheck {
     Always,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 enum WorkflowDestination<'a> {
     Workflow(&'a str),
     Reject,
@@ -187,6 +187,250 @@ impl AocSolution for Part1 {
     }
 }
 
+struct PartRange<'a> {
+    x: (u64, u64),
+    m: (u64, u64),
+    a: (u64, u64),
+    s: (u64, u64),
+    destination: WorkflowDestination<'a>,
+}
+
+fn run_range_workflows(workflows: &HashMap<&str, Vec<WorkflowStep>>) -> u64 {
+    let mut ranges = vec![PartRange {
+        x: (1, 4001),
+        m: (1, 4001),
+        a: (1, 4001),
+        s: (1, 4001),
+        destination: WorkflowDestination::Workflow("in"),
+    }];
+    let mut accepted = 0;
+    while let Some(PartRange {
+        x,
+        m,
+        a,
+        s,
+        destination,
+    }) = ranges.pop()
+    {
+        match destination {
+            WorkflowDestination::Workflow(d) => {
+                let workflow = &workflows[d];
+                workflow
+                    .iter()
+                    .fold((x, m, a, s), |(x, m, a, s), check| match check.check {
+                        WorkflowCheck::XAbove(v) => {
+                            let (j, k) = x;
+                            if k < v {
+                                ranges.push(PartRange {
+                                    x,
+                                    m,
+                                    a,
+                                    s,
+                                    destination: check.destination.clone(),
+                                });
+                                ((0, 0), (0, 0), (0, 0), (0, 0))
+                            } else if j < v {
+                                ranges.push(PartRange {
+                                    x: (v, k),
+                                    m,
+                                    a,
+                                    s,
+                                    destination: check.destination.clone(),
+                                });
+                                ((j, v), m, a, s)
+                            } else {
+                                (x, m, a, s)
+                            }
+                        }
+                        WorkflowCheck::XBelow(v) => {
+                            let (j, k) = x;
+                            if v < j {
+                                ranges.push(PartRange {
+                                    x,
+                                    m,
+                                    a,
+                                    s,
+                                    destination: check.destination.clone(),
+                                });
+                                ((0, 0), (0, 0), (0, 0), (0, 0))
+                            } else if v < k {
+                                ranges.push(PartRange {
+                                    x: (j, v),
+                                    m,
+                                    a,
+                                    s,
+                                    destination: check.destination.clone(),
+                                });
+                                ((v, k), m, a, s)
+                            } else {
+                                (x, m, a, s)
+                            }
+                        }
+                        WorkflowCheck::MAbove(v) => {
+                            let (j, k) = m;
+                            if k < v {
+                                ranges.push(PartRange {
+                                    x,
+                                    m,
+                                    a,
+                                    s,
+                                    destination: check.destination.clone(),
+                                });
+                                ((0, 0), (0, 0), (0, 0), (0, 0))
+                            } else if j < v {
+                                ranges.push(PartRange {
+                                    x,
+                                    m: (v, k),
+                                    a,
+                                    s,
+                                    destination: check.destination.clone(),
+                                });
+                                (x, (j, v), a, s)
+                            } else {
+                                (x, m, a, s)
+                            }
+                        }
+                        WorkflowCheck::MBelow(v) => {
+                            let (j, k) = m;
+                            if v < j {
+                                ranges.push(PartRange {
+                                    x,
+                                    m,
+                                    a,
+                                    s,
+                                    destination: check.destination.clone(),
+                                });
+                                ((0, 0), (0, 0), (0, 0), (0, 0))
+                            } else if v < k {
+                                ranges.push(PartRange {
+                                    x,
+                                    m: (j, v),
+                                    a,
+                                    s,
+                                    destination: check.destination.clone(),
+                                });
+                                (x, (v, k), a, s)
+                            } else {
+                                (x, m, a, s)
+                            }
+                        }
+                        WorkflowCheck::AAbove(v) => {
+                            let (j, k) = a;
+                            if k < v {
+                                ranges.push(PartRange {
+                                    x,
+                                    m,
+                                    a,
+                                    s,
+                                    destination: check.destination.clone(),
+                                });
+                                ((0, 0), (0, 0), (0, 0), (0, 0))
+                            } else if j < v {
+                                ranges.push(PartRange {
+                                    x,
+                                    m,
+                                    a: (v, k),
+                                    s,
+                                    destination: check.destination.clone(),
+                                });
+                                (x, m, (j, v), s)
+                            } else {
+                                (x, m, a, s)
+                            }
+                        }
+                        WorkflowCheck::ABelow(v) => {
+                            let (j, k) = a;
+                            if v < j {
+                                ranges.push(PartRange {
+                                    x,
+                                    m,
+                                    a,
+                                    s,
+                                    destination: check.destination.clone(),
+                                });
+                                ((0, 0), (0, 0), (0, 0), (0, 0))
+                            } else if v < k {
+                                ranges.push(PartRange {
+                                    x,
+                                    m,
+                                    a: (j, v),
+                                    s,
+                                    destination: check.destination.clone(),
+                                });
+                                (x, m, (v, k), s)
+                            } else {
+                                (x, m, a, s)
+                            }
+                        }
+                        WorkflowCheck::SAbove(v) => {
+                            let (j, k) = s;
+                            if k < v {
+                                ranges.push(PartRange {
+                                    x,
+                                    m,
+                                    a,
+                                    s,
+                                    destination: check.destination.clone(),
+                                });
+                                ((0, 0), (0, 0), (0, 0), (0, 0))
+                            } else if j < v {
+                                ranges.push(PartRange {
+                                    x,
+                                    m,
+                                    a,
+                                    s: (v, k),
+                                    destination: check.destination.clone(),
+                                });
+                                (x, m, a, (j, v))
+                            } else {
+                                (x, m, a, s)
+                            }
+                        }
+                        WorkflowCheck::SBelow(v) => {
+                            let (j, k) = s;
+                            if v < j {
+                                ranges.push(PartRange {
+                                    x,
+                                    m,
+                                    a,
+                                    s,
+                                    destination: check.destination.clone(),
+                                });
+                                ((0, 0), (0, 0), (0, 0), (0, 0))
+                            } else if v < k {
+                                ranges.push(PartRange {
+                                    x,
+                                    m,
+                                    a,
+                                    s: (j, v),
+                                    destination: check.destination.clone(),
+                                });
+                                (x, m, a, (v, k))
+                            } else {
+                                (x, m, a, s)
+                            }
+                        }
+                        WorkflowCheck::Always => {
+                            ranges.push(PartRange {
+                                x,
+                                m,
+                                a,
+                                s,
+                                destination: check.destination.clone(),
+                            });
+                            ((0, 0), (0, 0), (0, 0), (0, 0))
+                        }
+                    });
+            }
+            WorkflowDestination::Reject => {}
+            WorkflowDestination::Accept => {
+                accepted += (x.1 - x.0) * (m.1 - m.0) * (a.1 - a.0) * (s.1 - s.0);
+            }
+        }
+    }
+    accepted
+}
+
 impl AocSolution for Part2 {
     const PART: u32 = 2;
     fn solution_path() -> String {
@@ -194,7 +438,8 @@ impl AocSolution for Part2 {
     }
 
     fn implementation(input: &str) -> String {
-        todo!("{}", input)
+        let (workflows, _) = parse_input(input);
+        run_range_workflows(&workflows).to_string()
     }
 }
 
