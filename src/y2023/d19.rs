@@ -187,6 +187,11 @@ impl AocSolution for Part1 {
     }
 }
 
+fn count_ranges(x: (u64, u64), m: (u64, u64), a: (u64, u64), s: (u64, u64)) -> u64 {
+    (x.1 - x.0) * (m.1 - m.0) * (a.1 - a.0) * (s.1 - s.0)
+}
+
+#[derive(Debug)]
 struct PartRange<'a> {
     x: (u64, u64),
     m: (u64, u64),
@@ -231,13 +236,13 @@ fn run_range_workflows(workflows: &HashMap<&str, Vec<WorkflowStep>>) -> u64 {
                                 ((0, 0), (0, 0), (0, 0), (0, 0))
                             } else if j < v {
                                 ranges.push(PartRange {
-                                    x: (v, k),
+                                    x: (v + 1, k),
                                     m,
                                     a,
                                     s,
                                     destination: check.destination.clone(),
                                 });
-                                ((j, v), m, a, s)
+                                ((j, v + 1), m, a, s)
                             } else {
                                 (x, m, a, s)
                             }
@@ -280,12 +285,12 @@ fn run_range_workflows(workflows: &HashMap<&str, Vec<WorkflowStep>>) -> u64 {
                             } else if j < v {
                                 ranges.push(PartRange {
                                     x,
-                                    m: (v, k),
+                                    m: (v + 1, k),
                                     a,
                                     s,
                                     destination: check.destination.clone(),
                                 });
-                                (x, (j, v), a, s)
+                                (x, (j, v + 1), a, s)
                             } else {
                                 (x, m, a, s)
                             }
@@ -329,11 +334,11 @@ fn run_range_workflows(workflows: &HashMap<&str, Vec<WorkflowStep>>) -> u64 {
                                 ranges.push(PartRange {
                                     x,
                                     m,
-                                    a: (v, k),
+                                    a: (v + 1, k),
                                     s,
                                     destination: check.destination.clone(),
                                 });
-                                (x, m, (j, v), s)
+                                (x, m, (j, v + 1), s)
                             } else {
                                 (x, m, a, s)
                             }
@@ -378,10 +383,10 @@ fn run_range_workflows(workflows: &HashMap<&str, Vec<WorkflowStep>>) -> u64 {
                                     x,
                                     m,
                                     a,
-                                    s: (v, k),
+                                    s: (v + 1, k),
                                     destination: check.destination.clone(),
                                 });
-                                (x, m, a, (j, v))
+                                (x, m, a, (j, v + 1))
                             } else {
                                 (x, m, a, s)
                             }
@@ -424,7 +429,7 @@ fn run_range_workflows(workflows: &HashMap<&str, Vec<WorkflowStep>>) -> u64 {
             }
             WorkflowDestination::Reject => {}
             WorkflowDestination::Accept => {
-                accepted += (x.1 - x.0) * (m.1 - m.0) * (a.1 - a.0) * (s.1 - s.0);
+                accepted += count_ranges(x, m, a, s);
             }
         }
     }
