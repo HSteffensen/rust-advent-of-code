@@ -1,4 +1,7 @@
-use std::fmt::{Debug, Display};
+use std::{
+    fmt::{Debug, Display},
+    ops::Rem,
+};
 
 use itertools::Itertools;
 
@@ -25,6 +28,12 @@ impl<T> SquareGrid<T> {
         } else {
             None
         }
+    }
+
+    pub fn get_infinitely_looping(&self, x: i64, y: i64) -> Option<&T> {
+        let x = x.rem(self.width as i64) as usize;
+        let y = y.rem(self.height as i64) as usize;
+        self.get(x, y)
     }
 
     pub fn set(&mut self, x: usize, y: usize, value: T) -> bool {
@@ -73,6 +82,13 @@ impl<T> SquareGrid<T> {
                     && (dx != &1 || dy != &1)
             })
             .map(|(dx, dy)| (x + dx - 1, y + dy - 1))
+            .collect_vec()
+    }
+
+    pub fn neighbors_4(&self, x: usize, y: usize) -> Vec<(usize, usize)> {
+        self.neighbors_8(x, y)
+            .into_iter()
+            .filter(|(x2, y2)| x == *x2 || y == *y2)
             .collect_vec()
     }
 }
